@@ -36,7 +36,7 @@ export default function NavbarMain() {
   ];
 
   return (
-    <header className="">
+    <header className="bg-white text-gray-800">
       {/* Main Navbar */}
       <nav className="navbar flex px-4 md:px-15 py-6 gap-6 items-center justify-between md:justify-start">
         {/* Logo */}
@@ -200,7 +200,7 @@ export default function NavbarMain() {
           {/* User Links */}
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-sm font-semibold text-gray-500 mb-4 uppercase tracking-wide">Account</h3>
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-4">
               {userLinks.map((link) => (
                 <li key={link.href}>
                   <Link

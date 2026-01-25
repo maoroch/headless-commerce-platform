@@ -1,6 +1,8 @@
 import Banner from "@/app/components/pages/home/Banner";
 import LinkingWords from "@/app/components/pages/home/LinkingWords";
 import ProductCatalog from "@/app/components/pages/home/ProductCatalog";
+import Blog from "./components/pages/home/Blog";
+import Instagram from "@/app/components/pages/home/Instagram";
 
 export default function Home() {
   return (
@@ -10,6 +12,8 @@ export default function Home() {
         <LinkingWords />
       </main>
       <ProductCatalog />
+      <Blog />
+      <Instagram />
     </>
   );
 }

@@ -194,7 +194,7 @@ export default function ProductCatalog() {
               </div>
 
               {/* Title */}
-              <h3 className="text-base sm:text-lg font-bold leading-snug mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
+              <h3 className="text-base sm:text-lg font-bold leading-snug mb-2 line-clamp-2 hover:text-yellow-500 transition-colors">
                 {product.name}
               </h3>
 
