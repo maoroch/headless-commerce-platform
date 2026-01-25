@@ -2,12 +2,14 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function NavbarMain() {
   const [query, setQuery] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const router = useRouter();
 
   const handleSearch = () => {
@@ -35,14 +37,61 @@ export default function NavbarMain() {
     { href: "/signin", label: "Sign in", icon: "/icons/auth.svg" },
   ];
 
+  // Handle scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // Show navbar when scrolling up
+      if (currentScrollY < lastScrollY) {
+        setIsVisible(true);
+      }
+      // Hide navbar when scrolling down (but not at the top)
+      else if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        setIsVisible(false);
+      }
+      // Show navbar when at the top
+      else if (currentScrollY < 50) {
+        setIsVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
   return (
-    <header className="bg-white text-gray-800">
+    <header
+      className={`
+        fixed
+        top-0
+        left-0
+        right-0
+        bg-white
+        text-gray-800
+        border-b
+        border-gray-100
+        z-50
+        transition-transform
+        duration-300
+        ease-out
+        ${isVisible ? "translate-y-0" : "-translate-y-full"}
+      `}
+    >
       {/* Main Navbar */}
       <nav className="navbar flex px-4 md:px-15 py-6 gap-6 items-center justify-between md:justify-start">
         {/* Logo */}
         <div className="logo">
           <Link href="/">
-            <Image src="/img/logos/logo.svg" className="w-[80px] md:w-[100px]" alt="Logo" width={100} height={50} />
+            <Image
+              src="/img/logos/logo.svg"
+              className="w-[80px] md:w-[100px]"
+              alt="Logo"
+              width={100}
+              height={50}
+            />
           </Link>
         </div>
 
@@ -57,7 +106,7 @@ export default function NavbarMain() {
             <img
               src="/icons/search.svg"
               alt=""
-              className="w-5 h-5 opacity-60 hover:opacity-100"
+              className="w-5 h-5 opacity-60 hover:opacity-100 transition-opacity"
             />
           </button>
 
@@ -67,7 +116,7 @@ export default function NavbarMain() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="w-full h-[50px] pl-12 pr-4 rounded-full bg-[#F7F6F4] focus:outline-none"
+            className="w-full h-[50px] pl-12 pr-4 rounded-full bg-[#F7F6F4] focus:outline-none focus:ring-2 focus:ring-black/10 transition-all"
           />
         </div>
 
@@ -75,9 +124,13 @@ export default function NavbarMain() {
         <div className="hidden md:flex nav-links justify-end">
           <ul className="flex gap-5 items-center">
             {userLinks.map((link) => (
-              <li key={link.href} className="grid w-15 place-items-center text-center cursor-pointer">
-                <img src={link.icon} alt={link.label} width={20} height={20} />
-                <Link href={link.href}>{link.label}</Link>
+              <li key={link.href} className="grid w-15 place-items-center text-center cursor-pointer group">
+                <div className="p-2 rounded-lg group-hover:bg-gray-100 transition-colors">
+                  <img src={link.icon} alt={link.label} width={20} height={20} />
+                </div>
+                <Link href={link.href} className="text-xs font-medium hover:text-black transition-colors">
+                  {link.label}
+                </Link>
               </li>
             ))}
           </ul>
@@ -86,12 +139,12 @@ export default function NavbarMain() {
         {/* Burger Menu Button - Mobile Only */}
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="md:hidden flex flex-col gap-1.5 ml-auto"
+          className="md:hidden flex flex-col gap-1.5 ml-auto p-2"
           aria-label="Toggle menu"
           aria-expanded={isMenuOpen}
         >
           <span
-            className={`w-6 h-0.5 bg-black transition-all duration-300 ${
+            className={`w-6 h-0.5 bg-black transition-all duration-300 origin-center ${
               isMenuOpen ? "rotate-45 translate-y-2" : ""
             }`}
           />
@@ -101,7 +154,7 @@ export default function NavbarMain() {
             }`}
           />
           <span
-            className={`w-6 h-0.5 bg-black transition-all duration-300 ${
+            className={`w-6 h-0.5 bg-black transition-all duration-300 origin-center ${
               isMenuOpen ? "-rotate-45 -translate-y-2" : ""
             }`}
           />
@@ -109,11 +162,16 @@ export default function NavbarMain() {
       </nav>
 
       {/* Desktop Navigation Links */}
-      <div className="links hidden md:block">
-        <ul className="flex gap-8 px-15 pb-6">
+      <div className="links hidden md:block border-t border-gray-100">
+        <ul className="flex gap-8 px-15 py-4">
           {navLinks.map((link) => (
             <li key={link.href}>
-              <Link href={link.href}>{link.label}</Link>
+              <Link
+                href={link.href}
+                className="text-sm font-medium text-gray-700 hover:text-black transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-black after:transition-all after:duration-300 hover:after:w-full"
+              >
+                {link.label}
+              </Link>
             </li>
           ))}
         </ul>
@@ -122,21 +180,35 @@ export default function NavbarMain() {
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-[rgba(0,0,0,0.35)] z-40 md:hidden"
+          className="fixed inset-0 bg-black/30 z-40 md:hidden backdrop-blur-sm"
           onClick={closeMenu}
         />
       )}
 
       {/* Mobile Menu */}
       <div
-        className={`fixed top-0 left-0 h-screen w-64 bg-white shadow-lg z-40 md:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto ${
-          isMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`
+          fixed
+          top-0
+          left-0
+          h-screen
+          w-72
+          bg-white
+          shadow-xl
+          z-40
+          md:hidden
+          transform
+          transition-transform
+          duration-300
+          ease-in-out
+          overflow-y-auto
+          ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
       >
         {/* Close Button */}
         <button
           onClick={closeMenu}
-          className="absolute top-6 right-4 text-gray-600 hover:text-black transition-colors"
+          className="absolute top-6 right-6 p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-600 hover:text-black"
           aria-label="Close menu"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,11 +229,7 @@ export default function NavbarMain() {
                 className="absolute left-4 top-1/2 -translate-y-1/2"
                 aria-label="Search"
               >
-                <img
-                  src="/icons/search.svg"
-                  alt=""
-                  className="w-5 h-5 opacity-60"
-                />
+                <img src="/icons/search.svg" alt="" className="w-5 h-5 opacity-60" />
               </button>
               <input
                 type="text"
@@ -174,21 +242,21 @@ export default function NavbarMain() {
                     closeMenu();
                   }
                 }}
-                className="w-full h-[45px] pl-12 pr-4 rounded-full bg-[#F7F6F4] focus:outline-none"
+                className="w-full h-[45px] pl-12 pr-4 rounded-full bg-[#F7F6F4] focus:outline-none focus:ring-2 focus:ring-black/10 transition-all"
               />
             </div>
           </div>
 
           {/* Navigation Links */}
           <nav className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-500 mb-4 uppercase tracking-wide">Menu</h3>
-            <ul className="flex flex-col gap-3">
+            <h3 className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">Menu</h3>
+            <ul className="flex flex-col gap-1">
               {navLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
                     onClick={closeMenu}
-                    className="block py-2 text-gray-700 hover:text-blue-600 hover:pl-2 transition-all"
+                    className="block py-3 px-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 hover:text-black transition-all duration-200"
                   >
                     {link.label}
                   </Link>
@@ -199,16 +267,16 @@ export default function NavbarMain() {
 
           {/* User Links */}
           <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-sm font-semibold text-gray-500 mb-4 uppercase tracking-wide">Account</h3>
-            <ul className="flex flex-col gap-4">
+            <h3 className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">Account</h3>
+            <ul className="flex flex-col gap-1">
               {userLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
                     onClick={closeMenu}
-                    className="flex items-center gap-3 py-2 text-gray-700 hover:text-blue-600 hover:pl-2 transition-all"
+                    className="flex items-center gap-3 py-3 px-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 hover:text-black transition-all duration-200"
                   >
-                    <img src={link.icon} alt={link.label} width={18} height={18} />
+                    <img src={link.icon} alt={link.label} width={20} height={20} className="w-5 h-5" />
                     {link.label}
                   </Link>
                 </li>

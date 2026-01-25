@@ -6,6 +6,7 @@ export default function Banner() {
 <div
   className="
     banner
+    md:mt-[156px]
     min-h-[560px]
     sm:min-h-96
     md:min-h-[450px]
@@ -57,7 +58,6 @@ export default function Banner() {
                     duration-300
                     ease-out
                     hover:bg-gray-900
-                    hover:shadow-xl
                     hover:shadow-black/30
                     active:scale-95
                     hover:pr-4
