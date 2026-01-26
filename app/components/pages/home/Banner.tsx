@@ -7,6 +7,7 @@ export default function Banner() {
   className="
     banner
     md:mt-[156px]
+    mt-20
     min-h-[560px]
     sm:min-h-96
     md:min-h-[450px]
