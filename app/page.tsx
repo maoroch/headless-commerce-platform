@@ -3,7 +3,7 @@ import LinkingWords from "@/app/components/pages/home/LinkingWords";
 import ProductCatalog from "@/app/components/pages/home/ProductCatalog";
 import Blog from "./components/pages/home/Blog";
 import Instagram from "@/app/components/pages/home/Instagram";
-
+import Reviews from "@/app/components/pages/home/Reviews";
 export default function Home() {
   return (
     <>
@@ -13,6 +13,7 @@ export default function Home() {
       </main>
       <ProductCatalog />
       <Blog />
+      <Reviews />
       <Instagram />
     </>
   );
