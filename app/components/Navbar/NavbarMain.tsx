@@ -205,9 +205,21 @@ export default function NavbarMain() {
           ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        <div className="pt-20 px-6 pb-6">
+        <div className="pt-5 px-6 pb-6">
           {/* Search on Mobile */}
           <div className="mb-8">
+                   {/* Logo */}
+        <div className="logo mb-5">
+          <Link href="/">
+            <Image
+              src="/img/logos/logo.svg"
+              className="w-[80px] md:w-[100px]"
+              alt="Logo"
+              width={100}
+              height={50}
+            />
+          </Link>
+        </div>
             <div className="search relative w-full">
               <button
                 type="button"
