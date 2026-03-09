@@ -2,44 +2,57 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Clock, Calendar } from 'lucide-react';
-import postsData from '@/data/blog.json';
-import type { BlogPost } from '@/types/blog';
-
-// При интеграции с WordPress замени на:
-// const res = await fetch(`https://your-site.com/wp-json/wp/v2/posts?slug=${slug}&_embed`);
-// const [post] = await res.json();
-
-const posts: BlogPost[] = postsData as BlogPost[];
+import {
+  getPosts,
+  getPostBySlug,
+  getPostImage,
+  getPostCategory,
+  getPostTags,
+  formatDate,
+  readTime,
+  stripHtml,
+  type WPPost,
+  type WPTerm,
+} from '@/lib/wordpress';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Health:    'bg-[#B3E5C9] text-gray-800',
-  Recipes:   'bg-[#FFCAB3] text-gray-800',
-  Education: 'bg-yellow-100 text-gray-800',
-  Nutrition: 'bg-[#B3E5C9] text-gray-800',
-  Lifestyle: 'bg-[#FFCAB3] text-gray-800',
+  Health:        'bg-[#B3E5C9] text-gray-800',
+  Recipes:       'bg-[#FFCAB3] text-gray-800',
+  Education:     'bg-yellow-100 text-gray-800',
+  Nutrition:     'bg-[#B3E5C9] text-gray-800',
+  Lifestyle:     'bg-[#FFCAB3] text-gray-800',
+  Uncategorized: 'bg-gray-100 text-gray-700',
 };
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export function generateStaticParams() {
-  return posts.map(p => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  const posts: WPPost[] = await getPosts(100);
+  return posts.map((p: WPPost) => ({ slug: p.slug }));
 }
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = posts.find(p => p.slug === slug);
+  const post: WPPost | null = await getPostBySlug(slug);
 
   if (!post) return notFound();
 
-  const related = posts.filter(p => p.slug !== slug).slice(0, 2);
+  const category = getPostCategory(post);
+  const tags: WPTerm[] = getPostTags(post);
+
+  // Похожие посты той же категории
+  const allPosts: WPPost[] = await getPosts(20);
+  const related: WPPost[] = allPosts
+    .filter((p: WPPost) => p.slug !== slug && getPostCategory(p) === category)
+    .slice(0, 2);
 
   return (
     <div className="min-h-screen bg-white mt-40">
       <div className="px-4 sm:px-6 lg:px-15 py-8 sm:py-12 lg:py-16 mt-8 sm:mt-12 lg:mt-16">
 
-        {/* ── Back link ── */}
+        {/* Back */}
         <Link
           href="/blog"
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-black transition-colors mb-10 group font-medium"
@@ -48,65 +61,73 @@ export default async function BlogPostPage({ params }: Props) {
           Back to Blog
         </Link>
 
-        {/* ── Article + Sidebar ── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-10 lg:gap-16 items-start">
 
-          {/* ── Article ── */}
+          {/* Article */}
           <article>
 
             {/* Hero image */}
             <div className="relative w-full h-64 sm:h-80 md:h-[420px] rounded-2xl sm:rounded-3xl overflow-hidden mb-8">
               <Image
-                src={post.image}
-                alt={post.title}
+                src={getPostImage(post)}
+                alt={post.title.rendered}
                 fill
                 sizes="(max-width: 1024px) 100vw, 70vw"
                 className="object-cover"
                 priority
+                unoptimized
               />
             </div>
 
             {/* Meta */}
             <div className="flex flex-wrap items-center gap-3 mb-5">
-              <span className={`px-3 py-1.5 text-xs font-semibold rounded-full ${CATEGORY_COLORS[post.category] ?? 'bg-gray-100 text-gray-700'}`}>
-                {post.category}
+              <span className={`px-3 py-1.5 text-xs font-semibold rounded-full ${CATEGORY_COLORS[category] ?? 'bg-gray-100 text-gray-700'}`}>
+                {category}
               </span>
               <span className="flex items-center gap-1.5 text-xs text-gray-400">
-                <Calendar size={12} /> {post.date}
+                <Calendar size={12} /> {formatDate(post.date)}
               </span>
               <span className="flex items-center gap-1.5 text-xs text-gray-400">
-                <Clock size={12} /> {post.readTime}
+                <Clock size={12} /> {readTime(post)}
               </span>
             </div>
 
             {/* Title */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-6">
-              {post.title}
+              {post.title.rendered}
             </h1>
 
             {/* Excerpt lead */}
             <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-8 border-l-4 border-[#B3E5C9] pl-5">
-              {post.excerpt}
+              {stripHtml(post.excerpt.rendered)}
             </p>
 
-            {/* Body — content is string[] in JSON, each item = paragraph */}
-            <div className="space-y-5 text-gray-700 text-base leading-[1.9]">
-              {post.content.map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
-            </div>
+            {/* WP HTML content */}
+            <div
+              className="prose prose-sm sm:prose-base max-w-none text-gray-700 leading-[1.9]
+                prose-headings:font-bold prose-headings:text-gray-900
+                prose-a:text-black prose-a:underline prose-a:underline-offset-2
+                prose-blockquote:border-l-4 prose-blockquote:border-[#B3E5C9] prose-blockquote:pl-4 prose-blockquote:text-gray-500
+                prose-img:rounded-2xl prose-img:w-full"
+              dangerouslySetInnerHTML={{ __html: post.content.rendered }}
+            />
 
             {/* Tags */}
-            <div className="flex flex-wrap gap-2 mt-10 pt-8 border-t border-gray-100">
-              {post.tags.map(tag => (
-                <span key={tag} className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-                  #{tag}
-                </span>
-              ))}
-            </div>
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-10 pt-8 border-t border-gray-100">
+                {tags.map((tag: WPTerm) => (
+                  <span
+                    key={tag.slug}
+                    className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full"
+                  >
+                    #{tag.slug}
+                  </span>
+                ))}
+              </div>
+            )}
           </article>
 
-          {/* ── Sidebar ── */}
+          {/* Sidebar */}
           <aside className="flex flex-col gap-6">
 
             {/* About */}
@@ -122,22 +143,22 @@ export default async function BlogPostPage({ params }: Props) {
               <div>
                 <p className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-5">Related Articles</p>
                 <div className="flex flex-col gap-4">
-                  {related.map(p => (
+                  {related.map((p: WPPost) => (
                     <Link key={p.id} href={`/blog/${p.slug}`}>
                       <div className="group flex gap-4 items-start">
                         <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                           <Image
-                            src={p.image}
-                            alt={p.title}
+                            src={getPostImage(p)}
+                            alt={p.title.rendered}
                             fill
                             sizes="64px"
                             className="object-cover group-hover:scale-110 transition-transform duration-300"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-400 mb-1">{p.date}</p>
+                          <p className="text-xs text-gray-400 mb-1">{formatDate(p.date)}</p>
                           <h4 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-yellow-500 transition-colors leading-snug">
-                            {p.title}
+                            {p.title.rendered}
                           </h4>
                         </div>
                       </div>
@@ -165,7 +186,7 @@ export default async function BlogPostPage({ params }: Props) {
           </aside>
         </div>
 
-        {/* ── Bottom CTA ── */}
+        {/* Bottom CTA */}
         <div className="flex justify-center mt-16 sm:mt-20">
           <Link
             href="/blog"

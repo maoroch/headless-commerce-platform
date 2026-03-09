@@ -1,158 +1,147 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Package, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { useAuth } from '@/context/Authcontext';
+import { useCart } from '@/context/Cartcontext';
 
-// ── Types (will map to WooCommerce order object later) ──
-type OrderStatus = 'processing' | 'shipped' | 'delivered' | 'cancelled';
+const WP = process.env.NEXT_PUBLIC_WORDPRESS_URL ?? 'http://coom-endem-server.local';
+const KEY = process.env.NEXT_PUBLIC_WC_CONSUMER_KEY ?? '';
+const SEC = process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET ?? '';
 
-interface OrderItem {
+// WooCommerce order types
+type OrderStatus = 'pending' | 'processing' | 'on-hold' | 'completed' | 'cancelled' | 'refunded' | 'failed';
+
+interface WCLineItem {
   id: number;
   name: string;
-  image: string;
-  price: number;
-  qty: number;
+  quantity: number;
+  total: string;
+  image?: { src: string };
+  product_id: number;
 }
 
-interface Order {
-  id: string;
-  date: string;
+interface WCOrder {
+  id: number;
   status: OrderStatus;
-  items: OrderItem[];
-  total: number;
-  shippingAddress: string;
+  date_created: string;
+  total: string;
+  line_items: WCLineItem[];
+  shipping: {
+    first_name: string;
+    last_name: string;
+    address_1: string;
+    city: string;
+    country: string;
+  };
 }
 
-// ── Mock data (replace with WooCommerce API response) ──
-const MOCK_ORDERS: Order[] = [
-  {
-    id: '#10482',
-    date: 'March 5, 2025',
-    status: 'delivered',
-    total: 47.97,
-    shippingAddress: '12 Green Lane, London, UK',
-    items: [
-      { id: 1, name: 'Organic Almonds 500g', image: '/img/instagram/1.png', price: 14.99, qty: 2 },
-      { id: 2, name: 'Cold-pressed Orange Juice', image: '/img/instagram/2.png', price: 7.99, qty: 1 },
-      { id: 3, name: 'Mixed Berry Granola', image: '/img/instagram/3.png', price: 9.99, qty: 1 },
-    ],
-  },
-  {
-    id: '#10391',
-    date: 'February 18, 2025',
-    status: 'delivered',
-    total: 29.98,
-    shippingAddress: '12 Green Lane, London, UK',
-    items: [
-      { id: 4, name: 'Dried Mango Strips', image: '/img/instagram/4.png', price: 12.99, qty: 1 },
-      { id: 5, name: 'Organic Cashews 250g', image: '/img/instagram/1.png', price: 16.99, qty: 1 },
-    ],
-  },
-  {
-    id: '#10502',
-    date: 'March 8, 2025',
-    status: 'processing',
-    total: 34.97,
-    shippingAddress: '12 Green Lane, London, UK',
-    items: [
-      { id: 6, name: 'Organic Green Tea', image: '/img/instagram/2.png', price: 11.99, qty: 1 },
-      { id: 7, name: 'Chia Seeds 400g', image: '/img/instagram/3.png', price: 8.99, qty: 1 },
-      { id: 8, name: 'Coconut Oil 300ml', image: '/img/instagram/4.png', price: 13.99, qty: 1 },
-    ],
-  },
-];
-
-const STATUS_CONFIG: Record<OrderStatus, { label: string; bg: string; text: string }> = {
-  processing: { label: 'Processing',  bg: 'bg-yellow-100',       text: 'text-yellow-700' },
-  shipped:    { label: 'Shipped',     bg: 'bg-[#B3E5C9]/60',     text: 'text-green-700'  },
-  delivered:  { label: 'Delivered',   bg: 'bg-[#B3E5C9]',        text: 'text-green-800'  },
-  cancelled:  { label: 'Cancelled',   bg: 'bg-[#FFCAB3]',        text: 'text-red-700'    },
+// Status map — matches original STATUS_CONFIG style
+const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
+  processing: { label: 'Processing', bg: 'bg-yellow-100',     text: 'text-yellow-700' },
+  'on-hold':  { label: 'On Hold',    bg: 'bg-yellow-100',     text: 'text-yellow-700' },
+  completed:  { label: 'Delivered',  bg: 'bg-[#B3E5C9]',      text: 'text-green-800'  },
+  pending:    { label: 'Pending',    bg: 'bg-[#B3E5C9]/60',   text: 'text-green-700'  },
+  cancelled:  { label: 'Cancelled',  bg: 'bg-[#FFCAB3]',      text: 'text-red-700'    },
+  refunded:   { label: 'Refunded',   bg: 'bg-[#FFCAB3]',      text: 'text-red-700'    },
+  failed:     { label: 'Failed',     bg: 'bg-[#FFCAB3]',      text: 'text-red-700'    },
 };
 
-function OrderCard({ order }: { order: Order }) {
+const FILTER_TABS = [
+  { key: 'all',        label: 'All'        },
+  { key: 'processing', label: 'Processing' },
+  { key: 'pending',    label: 'Pending'    },
+  { key: 'completed',  label: 'Delivered'  },
+  { key: 'cancelled',  label: 'Cancelled'  },
+];
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function OrderCard({ order }: { order: WCOrder }) {
   const [expanded, setExpanded] = useState(false);
-  const status = STATUS_CONFIG[order.status];
+  const status = STATUS_CONFIG[order.status] ?? { label: order.status, bg: 'bg-gray-100', text: 'text-gray-700' };
+
+  const address = [order.shipping.address_1, order.shipping.city, order.shipping.country]
+    .filter(Boolean).join(', ');
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-shadow duration-200 hover:shadow-md">
 
-      {/* ── Order header ── */}
-      <div
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 sm:px-8 py-5 cursor-pointer select-none"
-        onClick={() => setExpanded(p => !p)}
-      >
+      {/* Order header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 sm:px-8 py-5 cursor-pointer select-none"
+        onClick={() => setExpanded(p => !p)}>
         <div className="flex items-center gap-4">
-          {/* Icon */}
           <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
             <Package size={18} className="text-gray-500" />
           </div>
           <div>
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="font-bold text-gray-900 text-sm">{order.id}</span>
+              <span className="font-bold text-gray-900 text-sm">#{order.id}</span>
               <span className={`text-xs font-semibold px-3 py-1 rounded-full ${status.bg} ${status.text}`}>
                 {status.label}
               </span>
             </div>
-            <p className="text-xs text-gray-400 mt-0.5">{order.date} · {order.items.length} item{order.items.length !== 1 ? 's' : ''}</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {formatDate(order.date_created)} · {order.line_items.length} item{order.line_items.length !== 1 ? 's' : ''}
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-4 sm:gap-6">
-          <span className="text-lg font-bold text-gray-900">${order.total.toFixed(2)}</span>
+          <span className="text-lg font-bold text-gray-900">${parseFloat(order.total).toFixed(2)}</span>
           <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-gray-400 transition-colors">
             {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
           </div>
         </div>
       </div>
 
-      {/* ── Expanded items ── */}
+      {/* Expanded items */}
       {expanded && (
         <div className="border-t border-gray-50 px-6 sm:px-8 py-5 flex flex-col gap-4">
-
-          {/* Items list */}
-          {order.items.map(item => (
+          {order.line_items.map(item => (
             <div key={item.id} className="flex items-center gap-4">
               <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                <Image src={item.image} alt={item.name} fill sizes="56px" className="object-cover" />
+                {item.image?.src ? (
+                  <Image src={item.image.src} alt={item.name} fill sizes="56px" className="object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xl">🌿</div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 line-clamp-1">{item.name}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Qty: {item.qty}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Qty: {item.quantity}</p>
               </div>
               <span className="text-sm font-bold text-gray-900 flex-shrink-0">
-                ${(item.price * item.qty).toFixed(2)}
+                ${parseFloat(item.total).toFixed(2)}
               </span>
             </div>
           ))}
 
-          {/* Divider */}
           <div className="h-px bg-gray-50 my-1" />
 
-          {/* Footer */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <p className="text-xs text-gray-400">Delivered to</p>
-              <p className="text-sm text-gray-700 font-medium mt-0.5">{order.shippingAddress}</p>
-            </div>
+            {address && (
+              <div>
+                <p className="text-xs text-gray-400">Delivered to</p>
+                <p className="text-sm text-gray-700 font-medium mt-0.5">{address}</p>
+              </div>
+            )}
             <div className="flex items-center gap-3">
-              {/* Reorder — pill CTA style */}
-              {order.status === 'delivered' && (
+              {order.status === 'completed' && (
                 <button
-                  onClick={() => console.log('Reorder:', order.id)}
-                  className="group inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white text-xs font-bold rounded-full hover:bg-gray-900 active:scale-95 transition-all duration-200"
-                >
+                  className="group inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white text-xs font-bold rounded-full hover:bg-gray-900 active:scale-95 transition-all duration-200">
                   <RotateCcw size={13} />
                   Reorder
                 </button>
               )}
-              <Link
-                href={`/orders/${order.id.replace('#', '')}`}
-                className="text-xs font-semibold text-gray-500 hover:text-black underline underline-offset-2 transition-colors"
-              >
+              <a href={`${WP}/my-account/view-order/${order.id}`} target="_blank" rel="noopener noreferrer"
+                className="text-xs font-semibold text-gray-500 hover:text-black underline underline-offset-2 transition-colors">
                 View details
-              </Link>
+              </a>
             </div>
           </div>
         </div>
@@ -162,96 +151,115 @@ function OrderCard({ order }: { order: Order }) {
 }
 
 export default function OrdersPage() {
-  const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
+  const { user, token } = useAuth();
+  const [orders, setOrders] = useState<WCOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
 
-  const statuses: { key: OrderStatus | 'all'; label: string }[] = [
-    { key: 'all',        label: 'All' },
-    { key: 'processing', label: 'Processing' },
-    { key: 'shipped',    label: 'Shipped' },
-    { key: 'delivered',  label: 'Delivered' },
-    { key: 'cancelled',  label: 'Cancelled' },
-  ];
-
-  const filtered = filter === 'all'
-    ? MOCK_ORDERS
-    : MOCK_ORDERS.filter(o => o.status === filter);
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const url = new URL(`${WP}/wp-json/wc/v3/orders`);
+        url.searchParams.set('consumer_key', KEY);
+        url.searchParams.set('consumer_secret', SEC);
+        url.searchParams.set('per_page', '20');
+        // Scope to current user when logged in
+        if (user?.id) url.searchParams.set('customer', String(user.id));
+        if (filter !== 'all') url.searchParams.set('status', filter);
+        const res = await fetch(url.toString(), {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const data = await res.json();
+        setOrders(Array.isArray(data) ? data : []);
+      } catch { setOrders([]); }
+      setLoading(false);
+    };
+    load();
+  }, [filter, user, token]);
 
   return (
     <div className="min-h-screen bg-white mt-40">
       <div className="px-4 sm:px-6 lg:px-15 py-8 sm:py-12 lg:py-16 mt-8 sm:mt-12 lg:mt-16">
 
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="mb-10 sm:mb-12 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">My Orders</h2>
             <p className="text-sm text-gray-500 mt-3">
-              {MOCK_ORDERS.length} order{MOCK_ORDERS.length !== 1 ? 's' : ''} total
+              {loading ? 'Loading...' : `${orders.length} order${orders.length !== 1 ? 's' : ''} total`}
             </p>
           </div>
-          <Link
-            href="/shop"
-            className="group inline-flex items-center gap-2 text-base font-semibold text-black hover:text-gray-600 transition-colors"
-          >
+          <Link href="/shop" className="group inline-flex items-center gap-2 text-base font-semibold text-black hover:text-gray-600 transition-colors">
             Continue Shopping
             <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
           </Link>
         </div>
 
-        {/* ── Filter tabs ── */}
+        {/* Not logged in banner */}
+        {!user && (
+          <div className="mb-8 bg-[#B3E5C9]/30 rounded-2xl sm:rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-1">
+              <p className="font-bold text-gray-900 mb-1">Sign in to see your orders</p>
+              <p className="text-sm text-gray-500">Your full order history will appear once you're signed in.</p>
+            </div>
+            <Link href="/login"
+              className="group inline-flex items-center gap-3 px-6 py-3 bg-black text-white text-sm font-bold rounded-full hover:bg-gray-900 active:scale-95 transition-all duration-300 flex-shrink-0">
+              Sign In
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
+            </Link>
+          </div>
+        )}
+
+        {/* Filter tabs */}
         <div className="flex gap-2 flex-wrap mb-8">
-          {statuses.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setFilter(key)}
+          {FILTER_TABS.map(({ key, label }) => (
+            <button key={key} onClick={() => setFilter(key)}
               className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                filter === key
-                  ? 'bg-black text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
+                filter === key ? 'bg-black text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}>
               {label}
             </button>
           ))}
         </div>
 
-        {/* ── Empty state ── */}
-        {filtered.length === 0 && (
+        {/* Loading */}
+        {loading && (
+          <div className="flex flex-col gap-4">
+            {[1, 2, 3].map(i => <div key={i} className="rounded-2xl bg-gray-100 animate-pulse h-20" />)}
+          </div>
+        )}
+
+        {/* Empty */}
+        {!loading && orders.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="w-20 h-20 rounded-full bg-[#B3E5C9]/40 flex items-center justify-center mb-6">
               <Package size={32} className="text-gray-400" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">No orders here</h3>
             <p className="text-gray-500 text-sm max-w-xs leading-relaxed mb-8">
-              {filter === 'all'
-                ? "You haven't placed any orders yet."
-                : `No ${filter} orders found.`}
+              {filter === 'all' ? "You haven't placed any orders yet." : `No ${filter} orders found.`}
             </p>
-            <Link
-              href="/shop"
-              className="group inline-flex items-center gap-3 px-8 py-4 bg-black text-white text-sm font-bold rounded-full hover:bg-gray-900 hover:shadow-lg active:scale-95 transition-all duration-300"
-            >
+            <Link href="/shop"
+              className="group inline-flex items-center gap-3 px-8 py-4 bg-black text-white text-sm font-bold rounded-full hover:bg-gray-900 hover:shadow-lg active:scale-95 transition-all duration-300">
               Start Shopping
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
           </div>
         )}
 
-        {/* ── Orders list ── */}
-        {filtered.length > 0 && (
+        {/* Orders list */}
+        {!loading && orders.length > 0 && (
           <div className="flex flex-col gap-4">
-            {filtered.map(order => (
-              <OrderCard key={order.id} order={order} />
-            ))}
+            {orders.map(order => <OrderCard key={order.id} order={order} />)}
           </div>
         )}
 
-        {/* ── Bottom CTA ── */}
-        {filtered.length > 0 && (
+        {/* Bottom CTA */}
+        {!loading && orders.length > 0 && (
           <div className="flex justify-center mt-16 sm:mt-20">
-            <Link
-              href="/shop"
-              className="group w-full sm:w-auto sm:min-w-80 border border-black rounded-full flex items-center justify-between pl-6 sm:pl-8 pr-2 py-2 sm:py-3 transition-all duration-300 ease-out hover:bg-black hover:text-white hover:shadow-xl active:scale-95"
-            >
+            <Link href="/shop"
+              className="group w-full sm:w-auto sm:min-w-80 border border-black rounded-full flex items-center justify-between pl-6 sm:pl-8 pr-2 py-2 sm:py-3 transition-all duration-300 ease-out hover:bg-black hover:text-white hover:shadow-xl active:scale-95">
               <span className="text-sm sm:text-base font-bold tracking-wide">Shop Again</span>
               <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-black flex items-center justify-center group-hover:bg-white transition-all duration-300 group-hover:scale-110 flex-shrink-0">
                 <ArrowRight className="text-white group-hover:text-black transition-all duration-300 group-hover:translate-x-1" size={20} strokeWidth={2.5} />

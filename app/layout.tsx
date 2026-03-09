@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/app/components/Navbar/NavbarMain";
-import Footer from "@/app/components/Footer/Footer";
+import Navbar from "@/components/Navbar/NavbarMain";
+import Footer from "@/components/Footer/Footer";
+import { FavouritesProvider } from "@/context/FavouritesContext";
+import { CartProvider } from "@/context/Cartcontext";
+import { AuthProvider } from "@/context/Authcontext";
 
 export const metadata: Metadata = {
   title: "Coom Endem — Organic Products for Health & Nature Care",
@@ -16,9 +19,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body >
+                <AuthProvider>
+          <CartProvider>
+            <FavouritesProvider>
+
         <Navbar />
         {children}
         <Footer />
+      </FavouritesProvider>
+    </CartProvider>
+  </AuthProvider>
       </body>
     </html>
   );
