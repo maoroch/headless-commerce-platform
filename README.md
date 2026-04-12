@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Coom Endem — Organic Products Store
+
+**Coom Endem** is a modern e-commerce web application for organic and natural products. The store promotes healthy, eco-friendly living by offering a curated selection of organic food items, transparent pricing, and a clean shopping experience.
+
+## About the Project
+
+The homepage showcases the brand's key values — 100% natural products, fair prices, eco-friendly packaging, fast delivery, and a wide selection — and includes the following sections:
+
+- **Hero Banner** — full-screen responsive banner with a call-to-action button linking to the products page.
+- **Key Benefits** — a highlights bar with emojis summarising the brand's five core promises.
+- **Product Catalog** — a 4-column grid of featured organic products with ratings, descriptions, prices, add-to-favourites and add-to-cart interactions.
+- **Food Blog** — two colourful blog post cards ("Reasons to Go Organic" and "Healthy Snack Ideas") with a "Read More" button.
+- **Instagram Section** — auto-scrolling infinite carousel linking to the brand's Instagram feed.
+- **Navbar** — sticky, hide-on-scroll navigation with a search bar, page links (Home, Products, Categories, Sales, Discounts, Blog), and user links (Favourites, Orders, Sign In). Fully responsive with a slide-in mobile menu.
+- **Footer** — newsletter subscription button, grouped links (Customer Support, For Businesses, Legal), copyright, and social media icons (Facebook, Instagram, LinkedIn).
+
+## Tech Stack
+
+| Technology | Version |
+|---|---|
+| [Next.js](https://nextjs.org) | 16.1.4 |
+| [React](https://react.dev) | 19.2.3 |
+| [TypeScript](https://www.typescriptlang.org) | ^5 |
+| [Tailwind CSS](https://tailwindcss.com) | ^4 |
+| [lucide-react](https://lucide.dev) | ^0.563.0 |
+
+Custom fonts: **Noto Sans** (multiple weights) and **Candal**, served locally as `.woff2` files from `public/fonts/`.
+
+## Project Structure
+
+```
+coom-endem/
+├── app/
+│   ├── layout.tsx                   # Root layout (Navbar + Footer + metadata)
+│   ├── page.tsx                     # Homepage — assembles all sections
+│   ├── globals.css                  # Global styles
+│   └── components/
+│       ├── Navbar/
+│       │   └── NavbarMain.tsx       # Responsive sticky navbar with scroll hide
+│       ├── Footer/
+│       │   └── Footer.tsx           # Footer with links and social icons
+│       └── pages/home/
+│           ├── Banner.tsx           # Hero banner
+│           ├── LinkingWords.tsx     # Key benefits bar
+│           ├── ProductCatalog.tsx   # Product grid with favourites & cart
+│           ├── Blog.tsx             # Food blog section
+│           └── Instagram.tsx        # Auto-scroll Instagram carousel
+├── public/
+│   ├── img/                         # Product, banner, blog and Instagram images
+│   ├── icons/                       # SVG icons (search, star, social, auth…)
+│   ├── fonts/                       # Local woff2 font files
+│   └── img/logos/logo.svg           # Brand logo
+├── next.config.ts
+├── tailwind.config / postcss.config.mjs
+└── tsconfig.json
+```
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies and start the development server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Available Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the development server |
+| `npm run build` | Build for production |
+| `npm start` | Start the production server |
+| `npm run lint` | Run ESLint |
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
+The easiest way to deploy is via [Vercel](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for other hosting options.
