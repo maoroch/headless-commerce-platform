@@ -14,6 +14,19 @@ The homepage showcases the brand's key values — 100% natural products, fair pr
 - **Navbar** — sticky, hide-on-scroll navigation with a search bar, page links (Home, Products, Categories, Sales, Discounts, Blog), and user links (Favourites, Orders, Sign In). Fully responsive with a slide-in mobile menu.
 - **Footer** — newsletter subscription button, grouped links (Customer Support, For Businesses, Legal), copyright, and social media icons (Facebook, Instagram, LinkedIn).
 
+## Key Features
+
+- **Responsive Design** — fully adaptive layout across mobile, tablet, and desktop using Tailwind CSS breakpoints and a slide-in mobile drawer menu.
+- **Hide-on-Scroll Navbar** — sticky navigation bar that automatically hides when scrolling down and reappears when scrolling up, keeping the screen real estate clean on mobile.
+- **Product Catalog with Interactions** — 4-column product grid with hover-reveal "Add to Cart" button, toggleable heart (favourites) button with active state, star ratings, and review counts.
+- **Favourites Management** — client-side favourites list tracked in React state; heart icon fills red when a product is added to favourites.
+- **Integrated Search** — search bar in the navbar (desktop and mobile) that routes the user to `/search?q=…` on submit or on Enter key press.
+- **Auto-Scrolling Instagram Carousel** — infinite CSS-animated image strip that loops seamlessly, linking to the brand's Instagram feed.
+- **Food Blog Section** — visually rich blog post cards with cover images, category tags, titles, and "Read More" call-to-action buttons.
+- **Newsletter Subscription** — footer email opt-in with a subscribe button.
+- **Local Custom Fonts** — `Noto Sans` (multiple weights) and `Candal` served from `public/fonts/` as `.woff2` files for zero-dependency typography.
+- **WordPress + WooCommerce Backend** — product catalogue and blog content are managed through a [WordPress](https://wordpress.org) CMS with the [WooCommerce](https://woocommerce.com) plugin. The Next.js front-end fetches product and post data from the WordPress REST API / WooCommerce REST API, keeping content updates completely code-free for store managers.
+
 ## Tech Stack
 
 | Technology | Version |
