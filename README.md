@@ -22,16 +22,21 @@ A production-ready headless e-commerce platform that replaces the traditional Wo
 ## Architecture Diagrams
 
 ### System Context
-![System Context](documentation/diagrams/png/Headless%20E-Commerce%20System%20Context.png)
+<img src="documentation/diagrams/png/Headless%20E-Commerce%20System%20Context.png" alt="System Context" width="600">
+
 
 ### Container Diagram
-![Container Diagram](documentation/diagrams/png/Headless%20E-Commerce%20Container%20Diagram.png)
+<img src="documentation/diagrams/png/Headless%20E-Commerce%20Container%20Diagram.png"
+alt="Container Diagram" width="600">
 
 ### Data Flow
-![Data Flow](documentation/diagrams/png/Headless%20E-Commerce%20Data%20Flow.png)
+<img src="documentation/diagrams/png/Headless%20E-Commerce%20Data%20Flow.png"
+alt="Data Flow" width="600">
 
 ### Frontend Components
-![Component Diagram](documentation/diagrams/png/Headless%20E-Commerce%20Frontend%20Components.png)
+<img src="documentation/diagrams/png/Headless%20E-Commerce%20Frontend%20Components.png"
+alt="Component Diagram" width="600">
+
 
 > PlantUML source files available in `documentation/diagrams/*.puml`
 
