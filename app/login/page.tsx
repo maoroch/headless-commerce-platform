@@ -22,11 +22,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col lg:flex-row ">
+    <div className="min-h-screen bg-white flex flex-col lg:flex-row mt-20">
 
       {/* Left panel — decorative */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-end p-16"
-        style={{ backgroundImage: "url('/img/banner/banner.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-end p-16 pb-32"
+        style={{ backgroundImage: "url('/img/auth/1.jpg')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="absolute inset-0 bg-black/30" />
         <div className="relative z-10">
           <span className="inline-block px-4 py-1.5 bg-[#B3E5C9] text-gray-800 text-xs font-semibold rounded-full mb-6">

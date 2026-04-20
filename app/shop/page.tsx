@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Heart, ShoppingCart, SlidersHorizontal, X, ArrowRight } from 'lucide-react';
+import { Heart, ShoppingCart, SlidersHorizontal, X, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCart } from '@/context/Cartcontext';
 import { useFavourites } from '@/context/FavouritesContext';
 import type { WCProduct, WCCategory } from '@/lib/wordpress';
@@ -31,12 +31,14 @@ interface FilterState {
 
 const DEFAULT_FILTERS: FilterState = {
   categories: [],
-  priceRange: [0, 1000],
+  priceRange: [0, 20],
   rating: null,
   inStock: false,
   organic: false,
   onSale: false,
 };
+
+const PRODUCTS_PER_PAGE = 12;
 
 export default function ShopPage() {
   const { addToCart } = useCart();
@@ -48,11 +50,14 @@ export default function ShopPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [sortBy, setSortBy] = useState('date');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetch(wcUrl('/products/categories', { hide_empty: 'true', per_page: '20' }))
       .then(r => r.json())
-      .then((data: WCCategory[]) => setCategories(Array.isArray(data) ? data.filter(c => c.slug !== 'uncategorized') : []))
+      .then((data: WCCategory[]) =>
+        setCategories(Array.isArray(data) ? data.filter(c => c.slug !== 'uncategorized') : [])
+      )
       .catch(() => {});
   }, []);
 
@@ -70,11 +75,16 @@ export default function ShopPage() {
     try {
       const data: WCProduct[] = await fetch(wcUrl('/products', params)).then(r => r.json());
       setProducts(Array.isArray(data) ? data : []);
-    } catch { setProducts([]); }
+    } catch {
+      setProducts([]);
+    }
     setLoading(false);
   }, [sortBy, filters.categories, filters.onSale, filters.inStock]);
 
   useEffect(() => { loadProducts(); }, [loadProducts]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setCurrentPage(1); }, [filters, sortBy]);
 
   const filtered = useMemo(() => products.filter(p => {
     const price = parseFloat(p.price) || 0;
@@ -84,23 +94,58 @@ export default function ShopPage() {
     return true;
   }), [products, filters.priceRange, filters.organic, filters.rating]);
 
-  const clearFilters = () => { setFilters(DEFAULT_FILTERS); setSortBy('date'); };
+  const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
+
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    return filtered.slice(start, start + PRODUCTS_PER_PAGE);
+  }, [filtered, currentPage]);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Generate page numbers with ellipsis
+  const getPageNumbers = () => {
+    const pages: (number | '...')[] = [];
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    pages.push(1);
+    if (currentPage > 3) pages.push('...');
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      pages.push(i);
+    }
+    if (currentPage < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+    return pages;
+  };
+
+  const clearFilters = () => {
+    setFilters(DEFAULT_FILTERS);
+    setSortBy('date');
+    setCurrentPage(1);
+  };
 
   const toggleCategory = (id: string) =>
     setFilters(prev => ({
       ...prev,
-      categories: prev.categories.includes(id) ? prev.categories.filter(c => c !== id) : [...prev.categories, id],
+      categories: prev.categories.includes(id)
+        ? prev.categories.filter(c => c !== id)
+        : [...prev.categories, id],
     }));
 
   const activeFilterCount =
     filters.categories.length +
-    (filters.inStock ? 1 : 0) + (filters.organic ? 1 : 0) + (filters.onSale ? 1 : 0) +
+    (filters.inStock ? 1 : 0) +
+    (filters.organic ? 1 : 0) +
+    (filters.onSale ? 1 : 0) +
     (filters.rating ? 1 : 0) +
     (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000 ? 1 : 0);
 
   const Sidebar = () => (
     <div className="space-y-8">
-      {/* Categories */}
       <div className="border-b border-gray-100 pb-8">
         <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-4">Category</h3>
         <div className="space-y-1">
@@ -116,14 +161,13 @@ export default function ShopPage() {
         </div>
       </div>
 
-      {/* Price Range */}
       <div className="border-b border-gray-100 pb-8">
         <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-4">Price Range</h3>
         <div className="space-y-3">
-          <input type="range" min="0" max="1000" value={filters.priceRange[0]}
+          <input type="range" min="0" max="20" value={filters.priceRange[0]}
             onChange={e => setFilters(prev => ({ ...prev, priceRange: [+e.target.value, prev.priceRange[1]] }))}
             className="w-full accent-black" />
-          <input type="range" min="0" max="1000" value={filters.priceRange[1]}
+          <input type="range" min="0" max="20" value={filters.priceRange[1]}
             onChange={e => setFilters(prev => ({ ...prev, priceRange: [prev.priceRange[0], +e.target.value] }))}
             className="w-full accent-black" />
           <div className="flex gap-3 mt-2">
@@ -139,14 +183,13 @@ export default function ShopPage() {
         </div>
       </div>
 
-      {/* Availability */}
       <div className="border-b border-gray-100 pb-8">
         <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-4">Availability</h3>
         <div className="space-y-1">
           {([
             { label: 'In Stock Only', key: 'inStock' },
-            { label: 'Organic Only',  key: 'organic' },
-            { label: 'On Sale',       key: 'onSale'  },
+            { label: 'Organic Only', key: 'organic' },
+            { label: 'On Sale', key: 'onSale' },
           ] as const).map(({ label, key }) => (
             <label key={key} className="flex items-center gap-3 py-2 px-3 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors group">
               <input type="checkbox" checked={!!filters[key]}
@@ -158,7 +201,6 @@ export default function ShopPage() {
         </div>
       </div>
 
-      {/* Rating */}
       <div className="border-b border-gray-100 pb-8">
         <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-4">Minimum Rating</h3>
         <select value={filters.rating ?? ''}
@@ -171,7 +213,6 @@ export default function ShopPage() {
         </select>
       </div>
 
-      {/* Sort */}
       <div className="border-b border-gray-100 pb-8">
         <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-4">Sort By</h3>
         <select value={sortBy} onChange={e => setSortBy(e.target.value)}
@@ -241,6 +282,7 @@ export default function ShopPage() {
           </aside>
 
           <main className="flex-1 min-w-0">
+            {/* Active filter chips */}
             {activeFilterCount > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
                 {filters.categories.map(id => {
@@ -279,14 +321,16 @@ export default function ShopPage() {
               </div>
             )}
 
+            {/* Skeleton loading */}
             {loading && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
-                {Array.from({ length: 8 }).map((_, i) => (
+                {Array.from({ length: PRODUCTS_PER_PAGE }).map((_, i) => (
                   <div key={i} className="rounded-xl bg-gray-100 animate-pulse aspect-square" />
                 ))}
               </div>
             )}
 
+            {/* Empty state */}
             {!loading && filtered.length === 0 && (
               <div className="text-center py-24">
                 <p className="text-5xl mb-4">🌿</p>
@@ -300,94 +344,138 @@ export default function ShopPage() {
               </div>
             )}
 
+            {/* Products grid */}
             {!loading && filtered.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
-                {filtered.map(product => {
-                  const image = product.images?.[0]?.src ?? '';
-                  const organic = product.tags?.some(t => t.slug === 'organic');
-                  const fav = isFavourite(product.id);
-                  const rating = Number(product.average_rating);
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
+                  {paginated.map(product => {
+                    const image = product.images?.[0]?.src ?? '';
+                    const organic = product.tags?.some(t => t.slug === 'organic');
+                    const fav = isFavourite(product.id);
+                    const rating = Number(product.average_rating);
 
-                  return (
-                    <div key={product.id}
-                      className="product-item group flex flex-col rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg bg-white border border-gray-100">
-                      <Link href={`/shop/${product.slug}`}>
-                        <div className="relative overflow-hidden bg-gray-100 aspect-square">
-                          {image ? (
-                            <Image src={image} alt={product.name} fill
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                              className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-5xl">🌿</div>
-                          )}
-                          {organic && (
-                            <span className="absolute top-3 left-3 px-3 py-1 bg-[#B3E5C9] text-gray-800 text-xs font-semibold rounded-full">Organic</span>
-                          )}
-                          {product.on_sale && !organic && (
-                            <span className="absolute top-3 left-3 px-3 py-1 bg-[#FFCAB3] text-gray-800 text-xs font-semibold rounded-full">Sale</span>
-                          )}
-                          {product.stock_status === 'outofstock' && (
-                            <span className="absolute top-3 left-3 px-3 py-1 bg-[#FFCAB3] text-gray-800 text-xs font-semibold rounded-full">Sold Out</span>
-                          )}
-                          <button onClick={e => { e.preventDefault(); toggleFavourite(product.id); }}
-                            className="absolute top-3 right-3 p-2 rounded-full bg-white shadow-md transition-all duration-200 hover:shadow-lg active:scale-90"
-                            aria-label="Add to favourites">
-                            <Heart size={18} className={fav ? 'fill-red-500 text-red-500' : 'text-gray-600 hover:text-red-500 transition-colors'} />
-                          </button>
-                          {product.stock_status !== 'outofstock' && (
-                            <button onClick={e => { e.preventDefault(); addToCart(product); }}
-                              className="absolute bottom-3 right-3 p-2.5 rounded-full bg-black text-white shadow-md transition-all duration-200 hover:bg-gray-900 hover:shadow-lg active:scale-90 opacity-0 group-hover:opacity-100"
-                              aria-label="Add to cart">
-                              <ShoppingCart size={18} />
+                    return (
+                      <div key={product.id}
+                        className="product-item group flex flex-col rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg bg-white border border-gray-100">
+                        <Link href={`/shop/${product.slug}`}>
+                          <div className="relative overflow-hidden bg-gray-100 aspect-square">
+                            {image ? (
+                              <Image src={image} alt={product.name} fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                                className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-5xl">🌿</div>
+                            )}
+                            {organic && (
+                              <span className="absolute top-3 left-3 px-3 py-1 bg-[#B3E5C9] text-gray-800 text-xs font-semibold rounded-full">Organic</span>
+                            )}
+                            {product.on_sale && !organic && (
+                              <span className="absolute top-3 left-3 px-3 py-1 bg-[#FFCAB3] text-gray-800 text-xs font-semibold rounded-full">Sale</span>
+                            )}
+                            {product.stock_status === 'outofstock' && (
+                              <span className="absolute top-3 left-3 px-3 py-1 bg-[#FFCAB3] text-gray-800 text-xs font-semibold rounded-full">Sold Out</span>
+                            )}
+                            <button onClick={e => { e.preventDefault(); toggleFavourite(product.id); }}
+                              className="absolute top-3 right-3 p-2 rounded-full bg-white shadow-md transition-all duration-200 hover:shadow-lg active:scale-90"
+                              aria-label="Add to favourites">
+                              <Heart size={18} className={fav ? 'fill-red-500 text-red-500' : 'text-gray-600 hover:text-red-500 transition-colors'} />
                             </button>
-                          )}
-                        </div>
-                      </Link>
-
-                      <div className="flex flex-col flex-1 p-4 sm:p-5">
-                        {rating > 0 && (
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="flex items-center gap-1">
-                              <Image src="/icons/star.svg" alt="Star" width={16} height={16} />
-                              <span className="text-sm font-semibold text-black">{rating.toFixed(1)}</span>
-                            </div>
-                            {product.rating_count > 0 && (
-                              <span className="text-xs text-gray-500">({product.rating_count} reviews)</span>
+                            {product.stock_status !== 'outofstock' && (
+                              <button onClick={e => { e.preventDefault(); addToCart(product); }}
+                                className="absolute bottom-3 right-3 p-2.5 rounded-full bg-black text-white shadow-md transition-all duration-200 hover:bg-gray-900 hover:shadow-lg active:scale-90 opacity-0 group-hover:opacity-100"
+                                aria-label="Add to cart">
+                                <ShoppingCart size={18} />
+                              </button>
                             )}
                           </div>
-                        )}
-                        <Link href={`/shop/${product.slug}`}>
-                          <h3 className="text-base sm:text-lg font-bold leading-snug mb-2 line-clamp-2 hover:text-yellow-500 transition-colors">
-                            {product.name}
-                          </h3>
                         </Link>
-                        {product.short_description && (
-                          <p className="text-sm text-gray-600 mb-4 flex-1 line-clamp-2 leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: product.short_description }} />
-                        )}
-                        <div className="flex items-center gap-2 mt-auto">
-                          <span className="text-lg font-bold text-black">${product.price}</span>
-                          {product.on_sale && product.regular_price && (
-                            <span className="text-sm text-gray-400 line-through">${product.regular_price}</span>
+
+                        <div className="flex flex-col flex-1 p-4 sm:p-5">
+                          {rating > 0 && (
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="flex items-center gap-1">
+                                <Image src="/icons/star.svg" alt="Star" width={16} height={16} />
+                                <span className="text-sm font-semibold text-black">{rating.toFixed(1)}</span>
+                              </div>
+                              {product.rating_count > 0 && (
+                                <span className="text-xs text-gray-500">({product.rating_count} reviews)</span>
+                              )}
+                            </div>
                           )}
+                          <Link href={`/shop/${product.slug}`}>
+                            <h3 className="text-base sm:text-lg font-bold leading-snug mb-2 line-clamp-2 hover:text-yellow-500 transition-colors">
+                              {product.name}
+                            </h3>
+                          </Link>
+                          {product.short_description && (
+                            <p className="text-sm text-gray-600 mb-4 flex-1 line-clamp-2 leading-relaxed"
+                              dangerouslySetInnerHTML={{ __html: product.short_description }} />
+                          )}
+                          <div className="flex items-center gap-2 mt-auto">
+                            <span className="text-lg font-bold text-black">${product.price}</span>
+                            {product.on_sale && product.regular_price && (
+                              <span className="text-sm text-gray-400 line-through">${product.regular_price}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-16 sm:mt-20">
+                    {/* Prev button */}
+                    <button
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center transition-all duration-200 hover:border-black hover:bg-black hover:text-white disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white disabled:hover:text-black"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+
+                    {/* Page numbers */}
+                    {getPageNumbers().map((page, i) =>
+                      page === '...' ? (
+                        <span key={`ellipsis-${i}`} className="w-10 h-10 flex items-center justify-center text-gray-400 text-sm">
+                          ...
+                        </span>
+                      ) : (
+                        <button
+                          key={page}
+                          onClick={() => goToPage(page as number)}
+                          className={`w-10 h-10 rounded-full text-sm font-semibold transition-all duration-200 ${
+                            currentPage === page
+                              ? 'bg-black text-white shadow-md'
+                              : 'border border-gray-200 text-gray-700 hover:border-black hover:bg-black hover:text-white'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    )}
+
+                    {/* Next button */}
+                    <button
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center transition-all duration-200 hover:border-black hover:bg-black hover:text-white disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white disabled:hover:text-black"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                )}
+
+                {/* Page info */}
+                {totalPages > 1 && (
+                  <p className="text-center text-xs text-gray-400 mt-4">
+                    Page {currentPage} of {totalPages} — {filtered.length} products
+                  </p>
+                )}
+              </>
             )}
           </main>
-        </div>
-
-        <div className="flex justify-center mt-16 sm:mt-20">
-          <button onClick={loadProducts}
-            className="group w-full sm:w-auto sm:min-w-80 border border-black rounded-full flex items-center justify-between pl-6 sm:pl-8 pr-2 py-2 sm:py-3 transition-all duration-300 ease-out hover:bg-black hover:text-white hover:shadow-xl active:scale-95">
-            <span className="text-sm sm:text-base font-bold tracking-wide">Load More Products</span>
-            <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-black flex items-center justify-center group-hover:bg-white transition-all duration-300 group-hover:scale-110 flex-shrink-0">
-              <ArrowRight className="text-white group-hover:text-black transition-all duration-300 group-hover:translate-x-1" size={20} strokeWidth={2.5} />
-            </div>
-          </button>
         </div>
       </div>
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 export default function Catalog() {
@@ -6,16 +7,19 @@ export default function Catalog() {
       id: 1,
       title: "Wholesome Breakfast",
       image: "/img/catalog/WholesomeBreakfast.png",
+      href: "/categories/wholesome-breakfast",
     },
     {
       id: 2,
       title: "Organic Juices",
       image: "/img/catalog/OrganicJuices.png",
+      href: "/categories/organic-juices",
     },
     {
       id: 3,
       title: "Dried & Fresh Fruits",
       image: "/img/catalog/DriedFreshFruits.png",
+      href: "/categories/dried-fresh-fruits",
     },
   ];
 
@@ -55,6 +59,7 @@ export default function Catalog() {
               Discover our categories!
             </p>
           </div>
+          <Link href="/categories/organic-nuts">
 
           <button className="
             group/btn
@@ -85,6 +90,7 @@ export default function Catalog() {
               className="group-hover/btn:translate-x-1 transition-transform duration-300"
             />
           </button>
+          </Link>
         </div>
 
         {/* Middle Column */}
@@ -92,113 +98,50 @@ export default function Catalog() {
           {categories.slice(0, 2).map((category) => (
             <div
               key={category.id}
-              className="
-                relative
-                rounded-2xl
-                sm:rounded-3xl
-                overflow-hidden
-                h-[220px]
-                sm:h-[260px]
-                lg:h-[290px]
-                group
-                cursor-pointer
-              "
+              className="relative rounded-2xl sm:rounded-3xl overflow-hidden h-[220px] sm:h-[260px] lg:h-[290px] group cursor-pointer"
               style={{
                 backgroundImage: `url('${category.image}')`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }}
             >
-              {/* Overlay */}
               <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all duration-300" />
 
-              {/* Content - Centered */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <button className="
-                  group/btn
-                  inline-flex
-                  items-center
-                  gap-2
-                  px-6
-                  sm:px-8
-                  py-3
-                  sm:py-4
-                  bg-black
-                  text-white
-                  font-semibold
-                  rounded-full
-                  hover:bg-gray-900
-                  transition-all
-                  duration-300
-                  active:scale-95
-                  shadow-md
-                  hover:shadow-lg
-                ">
-                  <span className="text-sm sm:text-base">{category.title}</span>
-                  <ArrowRight
-                    size={18}
-                    className="group-hover/btn:translate-x-1 transition-transform duration-300"
-                  />
-                </button>
+                <Link href={category.href}>
+                  <button className="group/btn inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-black text-white font-semibold rounded-full hover:bg-gray-900 transition-all duration-300 active:scale-95 shadow-md hover:shadow-lg">
+                    <span className="text-sm sm:text-base">{category.title}</span>
+                    <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform duration-300" />
+                  </button>
+                </Link>
               </div>
             </div>
           ))}
         </div>
 
+
         {/* Right Box */}
         <div
-          className="
-            lg:col-span-1
-            relative
-            rounded-2xl
-            sm:rounded-3xl
-            overflow-hidden
-            min-h-[400px]
-            sm:min-h-[500px]
-            lg:min-h-[600px]
-            group
-            cursor-pointer
-          "
+          className="lg:col-span-1 relative rounded-2xl sm:rounded-3xl overflow-hidden min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] group cursor-pointer"
           style={{
             backgroundImage: `url('${categories[2].image}')`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
         >
-          {/* Overlay */}
           <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all duration-300" />
 
-          {/* Content - Centered */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <button className="
-              group/btn
-              inline-flex
-              items-center
-              gap-2
-              px-6
-              sm:px-8
-              py-3
-              sm:py-4
-              bg-black
-              text-white
-              font-semibold
-              rounded-full
-              hover:bg-gray-900
-              transition-all
-              duration-300
-              active:scale-95
-              shadow-md
-              hover:shadow-lg
-            ">
-              <span className="text-sm sm:text-base">{categories[2].title}</span>
-              <ArrowRight
-                size={18}
-                className="group-hover/btn:translate-x-1 transition-transform duration-300"
-              />
-            </button>
+            <Link href={categories[2].href}>
+              <button className="group/btn inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-black text-white font-semibold rounded-full hover:bg-gray-900 transition-all duration-300 active:scale-95 shadow-md hover:shadow-lg">
+                <span className="text-sm sm:text-base">{categories[2].title}</span>
+                <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform duration-300" />
+              </button>
+            </Link>
           </div>
         </div>
       </div>
+
 
       {/* CTA Button */}
       <div className="flex justify-center">

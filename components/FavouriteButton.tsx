@@ -1,37 +1,22 @@
 'use client';
 
-import { useState } from 'react';
-import { ShoppingCart, Check } from 'lucide-react';
-import { useCart } from '@/context/Cartcontext';
-import type { WCProduct } from '@/lib/wordpress';
+import { Heart } from 'lucide-react';
+import { useFavourites } from '@/context/FavouritesContext';
 
-export default function AddToCartButton({ product }: { product: WCProduct }) {
-  const { addToCart } = useCart();
-  const [added, setAdded] = useState(false);
-
-  const handleAdd = () => {
-    addToCart(product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
-  };
+export default function FavouriteButton({ productId }: { productId: number }) {
+  const { toggleFavourite, isFavourite } = useFavourites();
+  const fav = isFavourite(productId);
 
   return (
     <button
-      onClick={handleAdd}
-      disabled={!['instock'].includes(product.stock_status)}
-      className={`flex-1 group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all duration-300 active:scale-95
-        ${added
-          ? 'bg-[#B3E5C9] text-gray-800'
-          : product.stock_status === 'instock'
-            ? 'bg-black text-white hover:bg-gray-900'
-            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+      onClick={() => toggleFavourite(productId)}
+      className={`p-3 rounded-full border transition-all duration-200
+        ${fav
+          ? 'bg-[#FFCAB3]/50 border-[#FFCAB3] text-red-400'
+          : 'border-gray-200 text-gray-400 hover:border-[#FFCAB3] hover:bg-[#FFCAB3]/20'
         }`}
     >
-      {added ? (
-        <><Check size={16} /> Added!</>
-      ) : (
-        <><ShoppingCart size={16} /> Add to Cart</>
-      )}
+      <Heart size={18} className={fav ? 'fill-red-400' : ''} />
     </button>
   );
 }

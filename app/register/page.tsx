@@ -24,7 +24,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-white flex flex-col lg:flex-row mt-20">
 
       {/* Left panel — decorative */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-end p-16"
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-end p-16 pb-32"
         style={{ backgroundImage: "url('/img/catalog/OrganicNuts.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="absolute inset-0 bg-black/25" />
         <div className="relative z-10">

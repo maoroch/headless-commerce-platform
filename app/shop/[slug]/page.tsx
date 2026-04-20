@@ -145,7 +145,7 @@ export default async function ProductPage({ params }: Props) {
               </div>
               {/* Client components for cart & favourite */}
               <div className="flex items-center gap-3">
-                <FavouriteButton product={product} />
+               <FavouriteButton productId={product.id} />
                 <AddToCartButton product={product} />
               </div>
             </div>

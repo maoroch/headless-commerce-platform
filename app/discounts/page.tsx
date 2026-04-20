@@ -108,7 +108,7 @@ export default function DiscountsPage() {
         <div
           className="relative rounded-2xl sm:rounded-3xl overflow-hidden mb-12 sm:mb-16 min-h-[280px] sm:min-h-[380px] flex items-end p-8 sm:p-14"
           style={{
-            backgroundImage: "url('/img/banner/banner.png')",
+            backgroundImage: "url('/img/discounts/hero.jpg')",
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}

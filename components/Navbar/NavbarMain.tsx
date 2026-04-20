@@ -4,12 +4,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Search, ChevronDown, LogOut, Package, Heart, ShoppingCart } from "lucide-react";
+import { Loader2, Search, ChevronDown, LogOut, Package, Heart, ShoppingCart, ArrowRight } from "lucide-react";
 import type { SearchResult } from "@/types/product";
 import { useAuth } from "@/context/Authcontext";
 import { useCart } from "@/context/Cartcontext";
+import type { WCCategory } from "@/lib/wordpress";
 
-// ── SearchBox вынесен наружу ──
+const WP = process.env.NEXT_PUBLIC_WORDPRESS_URL ?? 'http://coom-endem-server.local';
+const KEY = process.env.NEXT_PUBLIC_WC_CONSUMER_KEY ?? '';
+const SEC = process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET ?? '';
+
+const PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" font-size="28" text-anchor="middle" dominant-baseline="middle"%3E🌿%3C/text%3E%3C/svg%3E';
+
+// ── SearchBox ──
 interface SearchBoxProps {
   query: string;
   results: SearchResult[];
@@ -45,11 +52,6 @@ function SearchBox({
         onFocus={onFocus}
         className={`w-full pl-12 pr-4 rounded-full bg-[#F7F6F4] focus:outline-none focus:ring-2 focus:ring-black/10 transition-all ${mobile ? "h-[45px]" : "h-[50px]"}`}
       />
-      {query.length > 0 && query.length < 3 && (
-        <p className="absolute top-full left-4 mt-1.5 text-xs text-gray-400">
-          Type {3 - query.length} more character{3 - query.length !== 1 ? 's' : ''}…
-        </p>
-      )}
       {isDropdownOpen && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
           {results.length === 0 && !isLoading ? (
@@ -91,7 +93,7 @@ function SearchBox({
   );
 }
 
-// ── CartIcon — иконка корзины с бейджем ──
+// ── CartIcon ──
 function CartIcon() {
   const { totalItems } = useCart();
   return (
@@ -111,7 +113,7 @@ function CartIcon() {
   );
 }
 
-// ── UserMenu — десктопный дропдаун ──
+// ── UserMenu ──
 function UserMenu() {
   const { user, logout, loading } = useAuth();
   const [open, setOpen] = useState(false);
@@ -125,9 +127,7 @@ function UserMenu() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  if (loading) {
-    return <li><div className="w-20 h-8 bg-gray-100 animate-pulse rounded-full" /></li>;
-  }
+  if (loading) return <li><div className="w-20 h-8 bg-gray-100 animate-pulse rounded-full" /></li>;
 
   if (!user) {
     return (
@@ -143,7 +143,6 @@ function UserMenu() {
   }
 
   const initials = (user.firstName?.[0] ?? user.email[0]).toUpperCase();
-  const displayName = user.firstName || user.displayName.split(' ')[0];
 
   return (
     <div className="relative" ref={ref}>
@@ -154,7 +153,6 @@ function UserMenu() {
         </div>
         <ChevronDown size={13} className={`text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
-
       {open && (
         <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
           <div className="px-4 py-3 border-b border-gray-50">
@@ -186,6 +184,75 @@ function UserMenu() {
   );
 }
 
+// ── CategoriesDropdown ──
+function CategoriesDropdown({ categories }: { categories: WCCategory[] }) {
+  return (
+    <div className="
+      absolute top-full ml-[200px] left-1/2 -translate-x-1/2
+      mt-3 w-[580px]
+      bg-white rounded-2xl shadow-2xl border border-gray-100
+      overflow-hidden z-50
+      opacity-0 invisible translate-y-2
+      group-hover:opacity-100 group-hover:visible group-hover:translate-y-0
+      transition-all duration-200 ease-out
+    ">
+      {/* Header */}
+      <div className="px-5 pt-5 pb-3 border-b border-gray-50 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">Browse</p>
+          <h3 className="text-sm font-bold text-gray-900 mt-0.5">All Categories</h3>
+        </div>
+        <Link href="/categories"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-black transition-colors group/link">
+          View all
+          <ArrowRight size={12} className="group-hover/link:translate-x-0.5 transition-transform" />
+        </Link>
+      </div>
+
+      {/* Category grid */}
+      <div className="p-4 grid grid-cols-2 gap-2">
+        {categories.map((cat, i) => {
+          const imgSrc = cat.image?.src ?? PLACEHOLDER;
+          const accents = ['bg-[#FFCAB3]', 'bg-[#B3E5C9]', 'bg-yellow-100'];
+          const accent = accents[i % accents.length];
+
+          return (
+            <Link key={cat.id} href={`/categories/${cat.slug}`}>
+              <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-all duration-150 group/item cursor-pointer">
+                {/* Thumbnail */}
+                <div className={`relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 ${accent}`}>
+                  <Image
+                    src={imgSrc}
+                    alt={cat.name}
+                    fill
+                    sizes="48px"
+                    className="object-cover transition-transform duration-300 group-hover/item:scale-110"
+                  />
+                </div>
+
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 group-hover/item:text-black leading-snug truncate">
+                    {cat.name}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {cat.count} product{cat.count !== 1 ? 's' : ''}
+                  </p>
+                </div>
+
+                <ArrowRight
+                  size={14}
+                  className="text-gray-300 group-hover/item:text-black group-hover/item:translate-x-0.5 transition-all duration-150 flex-shrink-0"
+                />
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Основной компонент ──
 export default function NavbarMain() {
   const { user, logout } = useAuth();
@@ -195,7 +262,8 @@ export default function NavbarMain() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [categories, setCategories] = useState<WCCategory[]>([]);
+  const lastScrollY = useRef(0);
 
   const router = useRouter();
   const searchRef = useRef<HTMLDivElement>(null);
@@ -203,12 +271,22 @@ export default function NavbarMain() {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortController = useRef<AbortController | null>(null);
 
+  // Load categories for dropdown
+  useEffect(() => {
+    fetch(`${WP}/wp-json/wc/v3/products/categories?consumer_key=${KEY}&consumer_secret=${SEC}&hide_empty=true&per_page=20`)
+      .then(r => r.json())
+      .then((data: WCCategory[]) =>
+        setCategories(Array.isArray(data) ? data.filter(c => c.slug !== 'uncategorized') : [])
+      )
+      .catch(() => {});
+  }, []);
+
   const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/shop", label: "Products" },
-    { href: "/categories", label: "Categories" },
-    { href: "/discounts", label: "Discounts" },
-    { href: "/blog", label: "Blog" },
+    { href: "/",          label: "Home",        hasDropdown: false },
+    { href: "/shop",      label: "Products",    hasDropdown: false },
+    { href: "/categories", label: "Categories", hasDropdown: true  },
+    { href: "/discounts", label: "Discounts",   hasDropdown: false },
+    { href: "/blog",      label: "Blog",        hasDropdown: false },
   ];
 
   const staticLinks = [
@@ -269,13 +347,13 @@ export default function NavbarMain() {
   useEffect(() => {
     const handleScroll = () => {
       const y = window.scrollY;
-      if (y < lastScrollY || y < 50) setIsVisible(true);
-      else if (y > lastScrollY && y > 50) setIsVisible(false);
-      setLastScrollY(y);
+      if (y < lastScrollY.current || y < 50) setIsVisible(true);
+      else if (y > lastScrollY.current && y > 50) setIsVisible(false);
+      lastScrollY.current = y;
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
   const sharedProps = {
     query, results, isLoading, isDropdownOpen,
@@ -322,16 +400,32 @@ export default function NavbarMain() {
         </button>
       </nav>
 
+      {/* ── Desktop nav links row ── */}
       <div className="links hidden md:block border-t border-gray-100">
         <ul className="flex gap-8 px-15 py-4">
-          {navLinks.map((link) => (
-            <li key={link.href}>
-              <Link href={link.href}
-                className="text-sm font-medium text-gray-700 hover:text-black transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-black after:transition-all after:duration-300 hover:after:w-full">
-                {link.label}
-              </Link>
-            </li>
-          ))}
+          {navLinks.map((link) =>
+            link.hasDropdown ? (
+              // Categories — с мегадропдауном
+              <li key={link.href} className="relative group mt-[2px]">
+                <Link href={link.href}
+                  className="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-black transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-black after:transition-all after:duration-300 hover:after:w-full">
+                  {link.label}
+                  <ChevronDown
+                    size={13}
+                    className="text-gray-400 transition-transform duration-200 group-hover:rotate-180 mt-px"
+                  />
+                </Link>
+                {categories.length > 0 && <CategoriesDropdown categories={categories} />}
+              </li>
+            ) : (
+              <li key={link.href}>
+                <Link href={link.href}
+                  className="text-sm font-medium text-gray-700 hover:text-black transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-black after:transition-all after:duration-300 hover:after:w-full">
+                  {link.label}
+                </Link>
+              </li>
+            )
+          )}
         </ul>
       </div>
 
@@ -347,7 +441,7 @@ export default function NavbarMain() {
             <SearchBox {...sharedProps} mobile searchRef={mobileSearchRef} />
           </div>
 
-          <nav className="mb-8">
+          <nav className="mb-6">
             <h3 className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">Menu</h3>
             <ul className="flex flex-col gap-1">
               {navLinks.map((link) => (
@@ -361,12 +455,42 @@ export default function NavbarMain() {
             </ul>
           </nav>
 
+          {/* Mobile categories list */}
+          {categories.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Categories</h3>
+              <div className="flex flex-col gap-1">
+                {categories.map((cat, i) => {
+                  const accents = ['bg-[#FFCAB3]', 'bg-[#B3E5C9]', 'bg-yellow-100'];
+                  const accent = accents[i % accents.length];
+                  return (
+                    <Link key={cat.id} href={`/categories/${cat.slug}`} onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 py-2 px-3 rounded-xl hover:bg-gray-50 transition-colors group/mob">
+                      <div className={`relative w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 ${accent}`}>
+                        <Image
+                          src={cat.image?.src ?? PLACEHOLDER}
+                          alt={cat.name}
+                          fill
+                          sizes="36px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{cat.name}</p>
+                        <p className="text-xs text-gray-400">{cat.count} products</p>
+                      </div>
+                      <ArrowRight size={13} className="text-gray-300 group-hover/mob:text-black transition-colors flex-shrink-0" />
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">Account</h3>
-
             {user ? (
               <div className="flex flex-col gap-1">
-                {/* Профиль */}
                 <div className="flex items-center gap-3 px-3 py-3 mb-1">
                   <div className="w-9 h-9 rounded-full bg-[#B3E5C9] flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-bold text-gray-800">

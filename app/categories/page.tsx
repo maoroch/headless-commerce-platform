@@ -52,7 +52,7 @@ export default async function CategoriesPage() {
               const imgSrc = cat.image?.src ?? PLACEHOLDER;
               const accent = ACCENTS[i % ACCENTS.length];
               return (
-                <Link key={cat.id} href={`/shop?category=${cat.id}`}>
+                <Link key={cat.id} href={`/categories/${cat.slug}`}>
                   <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden min-h-[280px] sm:min-h-[340px] flex items-end p-8 group cursor-pointer bg-gray-100">
                     <Image src={imgSrc} alt={cat.name} fill
                       sizes="(max-width: 768px) 100vw, 50vw"
@@ -87,7 +87,7 @@ export default async function CategoriesPage() {
               const imgSrc = cat.image?.src ?? PLACEHOLDER;
               const accent = ACCENTS[(i + 2) % ACCENTS.length];
               return (
-                <Link key={cat.id} href={`/shop?category=${cat.id}`}>
+                <Link key={cat.id} href={`/categories/${cat.slug}`}>
                   <div className="group flex flex-col rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 bg-white">
                     <div className="relative h-44 overflow-hidden bg-gray-100">
                       <Image src={imgSrc} alt={cat.name} fill

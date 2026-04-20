@@ -1,96 +1,107 @@
+import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from 'lucide-react';
+import {
+  getPosts,
+  getPostImage,
+  getPostCategory,
+  formatDate,
+  readTime,
+  stripHtml,
+  type WPPost,
+} from '@/lib/wordpress';
 
-export default function Blog() {
-    const blogPosts = [
-        {
-            id: 1,
-            title: "Reasons to Go Organic",
-            description: "Discover how organic products can improve your health and support the environment.",
-            image: "/img/banner/blog/banner-blog-1.png",
-            bgColor: "bg-[#FFCAB3]",
-            order: "order-1",
-            imageOrder: "order-2",
-        },
-        {
-            id: 2,
-            title: "Healthy Snack Ideas",
-            description: "Quick and easy organic snack recipes to fuel your day and keep you energized.",
-            image: "/img/banner/blog/banner-blog-2.png",
-            bgColor: "bg-[#B3E5C9]",
-            order: "order-2",
-            imageOrder: "order-1",
-        },
-    ];
 
+
+const CATEGORY_COLORS: Record<string, string> = {
+  Health:        'bg-[#B3E5C9] text-gray-800',
+  Recipes:       'bg-[#FFCAB3] text-gray-800',
+  Education:     'bg-yellow-100 text-gray-800',
+  Nutrition:     'bg-[#B3E5C9] text-gray-800',
+  Lifestyle:     'bg-[#FFCAB3] text-gray-800',
+  Uncategorized: 'bg-gray-100 text-gray-700',
+};
+
+const FEATURED_CARD_COLORS = ['bg-[#FFCAB3]', 'bg-[#B3E5C9]'];
+
+    export default async function Blog() {
+
+      const posts: WPPost[] = await getPosts(20);
+    
+      const featured = posts.filter((p: WPPost) => p.sticky);
+      const rest = posts.filter((p: WPPost) => !p.sticky);
+      const categories = [
+        'All',
+        ...Array.from(new Set(posts.map((p: WPPost) => getPostCategory(p)))),
+      ];
+    
     return (
         <div className="px-4 sm:px-6 lg:px-15 py-8 sm:py-12 lg:py-16 mt-8 sm:mt-12 lg:mt-16">
-            {/* Header */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-4 sm:mb-10 lg:mb-8">
-                Food Blog
-            </h2>
 
-            {/* Blog Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
-                {blogPosts.map((post) => (
-                    <div key={post.id} className="flex flex-col gap-4 sm:gap-6">
-                        {/* Image - Reorderable */}
-                        <div className={`${post.imageOrder} h-50 sm:h-48 md:h-100 overflow-hidden rounded-lg sm:rounded-xl`}>
-                            <Image
-                                src={post.image}
-                                width={500}
-                                height={300}
-                                alt={post.title}
-                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                            />
-                        </div>
+        {/* Header */}
+        <div className="mb-10 sm:mb-12 lg:mb-16 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+          <div className="flex-1">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">Food Blog</h2>
+            <p className="text-sm sm:text-base text-gray-500 mt-3 leading-relaxed max-w-xl">
+              Tips, recipes and stories from the world of organic living.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat: string, i: number) => (
+              <span
+                key={cat}
+                className={`px-4 py-2 rounded-full text-sm font-semibold cursor-pointer transition-all duration-200 ${
+                  i === 0 ? 'bg-black text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {cat}
+              </span>
+            ))}
+          </div>
+        </div>
 
-                        {/* Content Card */}
-                        <div className={`${post.order} ${post.bgColor} h-48 sm:h-56 md:h-64 p-6 sm:p-8 rounded-lg sm:rounded-xl flex flex-col transition-all duration-300 hover:shadow-lg`}>
-                            <div className="info flex-1">
-                                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3 leading-tight">
-                                    {post.title}
-                                </h3>
-                                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2 sm:line-clamp-3">
-                                    {post.description}
-                                </p>
-                            </div>
-
-                            {/* Button */}
-                            <button className="
-                group
-                mt-6
-                sm:mt-auto
-                w-full
-                sm:w-40
-                h-11
-                sm:h-12
-                bg-black
-                text-white
-                text-sm
-                sm:text-base
-                font-semibold
-                rounded-full
-                hover:bg-gray-900
-                hover:shadow-lg
-                active:scale-95
-                transition-all
-                duration-300
-                flex
-                items-center
-                justify-center
-                gap-2
-              ">
-                                Read More
-                                <ArrowRight
-                                    size={18}
-                                    className="group-hover:translate-x-1 transition-transform duration-300"
-                                />
-                            </button>
-                        </div>
+        {/* Featured (sticky) posts */}
+        {featured.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 mb-12 sm:mb-16">
+            {featured.map((post: WPPost, i: number) => (
+              <Link key={post.id} href={`/blog/${post.slug}`}>
+                <div className="flex flex-col gap-4 sm:gap-6 group cursor-pointer">
+                  <div className={`${i % 2 === 0 ? 'order-1' : 'order-2'} h-52 sm:h-64 md:h-80 overflow-hidden rounded-xl sm:rounded-2xl`}>
+                    <Image
+                      src={getPostImage(post)}
+                      width={800}
+                      height={500}
+                      alt={post.title.rendered}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className={`${i % 2 === 0 ? 'order-2' : 'order-1'} ${FEATURED_CARD_COLORS[i % 2]} rounded-xl sm:rounded-2xl p-6 sm:p-8 flex flex-col transition-all duration-300 group-hover:shadow-lg`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-xs font-bold tracking-widest text-gray-500 uppercase">
+                        {getPostCategory(post)}
+                      </span>
+                      <span className="text-gray-400 text-xs">·</span>
+                      <span className="text-xs text-gray-500">{readTime(post)}</span>
                     </div>
-                ))}
-            </div>
+                    <h3 className="text-xl sm:text-2xl font-bold leading-tight mb-3 text-gray-900">
+                      {post.title.rendered}
+                    </h3>
+                    <p className="text-sm text-gray-700 leading-relaxed line-clamp-3 flex-1 mb-6">
+                      {stripHtml(post.excerpt.rendered)}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500">{formatDate(post.date)}</span>
+                      <button className="group/btn inline-flex items-center gap-2 px-6 py-2.5 bg-black text-white text-sm font-bold rounded-full hover:bg-gray-900 active:scale-95 transition-all duration-300">
+                        Read More
+                        <ArrowRight size={15} className="group-hover/btn:translate-x-1 transition-transform duration-300" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
         </div>
     );
 }

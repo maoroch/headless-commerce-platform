@@ -203,7 +203,7 @@ export async function getSaleProducts(): Promise<WCProduct[]> {
 
 export async function getCategories(): Promise<WCCategory[]> {
   return wpFetch<WCCategory[]>(
-    wcUrl('/products/categories', { per_page: '20', hide_empty: 'true' })
+    wcUrl('/products/categories', { per_page: '20'})
   );
 }
 
