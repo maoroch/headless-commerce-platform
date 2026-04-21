@@ -2,9 +2,9 @@
 // WordPress REST API + WooCommerce utilities
 // При деплое замени WORDPRESS_URL в .env.local на реальный домен
 
-const WP_BASE = process.env.NEXT_PUBLIC_WORDPRESS_URL ?? process.env.WORDPRESS_URL ?? 'http://coom-endem-server.local';
-const WC_KEY = process.env.NEXT_PUBLIC_WC_CONSUMER_KEY ?? process.env.WC_CONSUMER_KEY ?? '';
-const WC_SECRET = process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET ?? process.env.WC_CONSUMER_SECRET ?? '';
+const WP_BASE = process.env.WORDPRESS_URL ?? 'http://coom-endem-server.local';
+const WC_KEY = process.env.WC_CONSUMER_KEY ?? '';
+const WC_SECRET = process.env.WC_CONSUMER_SECRET ?? '';
 
 const WPR = `${WP_BASE}/wp-json/wp/v2`;
 const WC_BASE = `${WP_BASE}/wp-json/wc/v3`;
@@ -234,4 +234,14 @@ export function isInStock(product: WCProduct): boolean {
 
 export function isOrganic(product: WCProduct): boolean {
   return product.tags.some((t) => t.slug === 'organic');
+}
+
+export async function getOrderById(id: number | string): Promise<any | null> {
+  try {
+    const url = wcUrl(`/orders/${id}`);
+    return await wpFetch<any>(url, 0); // revalidate 0 — всегда свежие данные
+  } catch (error) {
+    console.error(`Failed to fetch order ${id}:`, error);
+    return null;
+  }
 }

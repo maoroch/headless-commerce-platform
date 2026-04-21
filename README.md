@@ -265,14 +265,11 @@ All client-side state is managed via React Context — no external state library
 ```env
 # WordPress + WooCommerce backend URL
 WORDPRESS_URL=https://your-wordpress-site.com
-NEXT_PUBLIC_WORDPRESS_URL=https://your-wordpress-site.com
 
 # WooCommerce REST API credentials
 # WP Admin → WooCommerce → Settings → Advanced → REST API
 WC_CONSUMER_KEY=ck_xxxxxxxxxxxxxxxxxxxx
 WC_CONSUMER_SECRET=cs_xxxxxxxxxxxxxxxxxxxx
-NEXT_PUBLIC_WC_CONSUMER_KEY=ck_xxxxxxxxxxxxxxxxxxxx
-NEXT_PUBLIC_WC_CONSUMER_SECRET=cs_xxxxxxxxxxxxxxxxxxxx
 ```
 
 > ⚠️ For production, use server-only env vars (without `NEXT_PUBLIC_`) for WC credentials. API Routes handle auth server-side.

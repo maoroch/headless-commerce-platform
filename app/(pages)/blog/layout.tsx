@@ -1,26 +1,26 @@
 // app/layout.tsx
 import type { Metadata } from "next";
-import "./globals.css";
 import { FavouritesProvider } from "@/context/FavouritesContext";
 import { CartProvider } from "@/context/Cartcontext";
 import { AuthProvider } from "@/context/Authcontext";
-import { defaultMetadata } from '@/lib/seo';
+import Navbar from "@/components/Navbar/NavbarMain";
+import Footer from "@/components/Footer/Footer";
+import { getPageMetadata } from '@/lib/seo';
 
-export const metadata = defaultMetadata;
+export const metadata = getPageMetadata('blog');
 
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function BlogLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
+      <>
         <AuthProvider>
           <CartProvider>
             <FavouritesProvider>
-              {children}
+              <Navbar />
+                {children}
+              <Footer />
             </FavouritesProvider>
           </CartProvider>
         </AuthProvider>
-      </body>
-    </html>
+      </>
   );
 }

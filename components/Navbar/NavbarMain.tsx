@@ -10,10 +10,6 @@ import { useAuth } from "@/context/Authcontext";
 import { useCart } from "@/context/Cartcontext";
 import type { WCCategory } from "@/lib/wordpress";
 
-const WP = process.env.NEXT_PUBLIC_WORDPRESS_URL ?? 'http://coom-endem-server.local';
-const KEY = process.env.NEXT_PUBLIC_WC_CONSUMER_KEY ?? '';
-const SEC = process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET ?? '';
-
 const PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" font-size="28" text-anchor="middle" dominant-baseline="middle"%3E🌿%3C/text%3E%3C/svg%3E';
 
 // ── SearchBox ──
@@ -93,7 +89,7 @@ function SearchBox({
   );
 }
 
-// ── CartIcon ──
+// ── CartIcon (уже использует ShoppingCart, без изменений) ──
 function CartIcon() {
   const { totalItems } = useCart();
   return (
@@ -113,7 +109,7 @@ function CartIcon() {
   );
 }
 
-// ── UserMenu ──
+// ── UserMenu (без изменений) ──
 function UserMenu() {
   const { user, logout, loading } = useAuth();
   const [open, setOpen] = useState(false);
@@ -184,7 +180,7 @@ function UserMenu() {
   );
 }
 
-// ── CategoriesDropdown ──
+// ── CategoriesDropdown (без изменений) ──
 function CategoriesDropdown({ categories }: { categories: WCCategory[] }) {
   return (
     <div className="
@@ -196,7 +192,6 @@ function CategoriesDropdown({ categories }: { categories: WCCategory[] }) {
       group-hover:opacity-100 group-hover:visible group-hover:translate-y-0
       transition-all duration-200 ease-out
     ">
-      {/* Header */}
       <div className="px-5 pt-5 pb-3 border-b border-gray-50 flex items-center justify-between">
         <div>
           <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">Browse</p>
@@ -208,18 +203,14 @@ function CategoriesDropdown({ categories }: { categories: WCCategory[] }) {
           <ArrowRight size={12} className="group-hover/link:translate-x-0.5 transition-transform" />
         </Link>
       </div>
-
-      {/* Category grid */}
       <div className="p-4 grid grid-cols-2 gap-2">
         {categories.map((cat, i) => {
           const imgSrc = cat.image?.src ?? PLACEHOLDER;
           const accents = ['bg-[#FFCAB3]', 'bg-[#B3E5C9]', 'bg-yellow-100'];
           const accent = accents[i % accents.length];
-
           return (
             <Link key={cat.id} href={`/categories/${cat.slug}`}>
               <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-all duration-150 group/item cursor-pointer">
-                {/* Thumbnail */}
                 <div className={`relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 ${accent}`}>
                   <Image
                     src={imgSrc}
@@ -229,8 +220,6 @@ function CategoriesDropdown({ categories }: { categories: WCCategory[] }) {
                     className="object-cover transition-transform duration-300 group-hover/item:scale-110"
                   />
                 </div>
-
-                {/* Text */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 group-hover/item:text-black leading-snug truncate">
                     {cat.name}
@@ -239,7 +228,6 @@ function CategoriesDropdown({ categories }: { categories: WCCategory[] }) {
                     {cat.count} product{cat.count !== 1 ? 's' : ''}
                   </p>
                 </div>
-
                 <ArrowRight
                   size={14}
                   className="text-gray-300 group-hover/item:text-black group-hover/item:translate-x-0.5 transition-all duration-150 flex-shrink-0"
@@ -271,10 +259,10 @@ export default function NavbarMain() {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortController = useRef<AbortController | null>(null);
 
-  // Load categories for dropdown
+  // Безопасная загрузка категорий через API route
   useEffect(() => {
-    fetch(`${WP}/wp-json/wc/v3/products/categories?consumer_key=${KEY}&consumer_secret=${SEC}&hide_empty=true&per_page=20`)
-      .then(r => r.json())
+    fetch('/api/shop?type=categories')
+      .then(res => res.json())
       .then((data: WCCategory[]) =>
         setCategories(Array.isArray(data) ? data.filter(c => c.slug !== 'uncategorized') : [])
       )
@@ -363,7 +351,6 @@ export default function NavbarMain() {
 
   return (
     <header className={`fixed top-0 left-0 right-0 bg-white text-gray-800 border-b border-gray-100 z-50 transition-transform duration-300 ease-out ${isVisible ? "translate-y-0" : "-translate-y-full"}`}>
-
       <nav className="navbar flex px-4 md:px-15 py-6 gap-6 items-center justify-between md:justify-start">
         <div className="logo">
           <Link href="/">
@@ -400,12 +387,11 @@ export default function NavbarMain() {
         </button>
       </nav>
 
-      {/* ── Desktop nav links row ── */}
+      {/* Desktop nav links row */}
       <div className="links hidden md:block border-t border-gray-100">
         <ul className="flex gap-8 px-15 py-4">
           {navLinks.map((link) =>
             link.hasDropdown ? (
-              // Categories — с мегадропдауном
               <li key={link.href} className="relative group mt-[2px]">
                 <Link href={link.href}
                   className="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-black transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-black after:transition-all after:duration-300 hover:after:w-full">
@@ -429,6 +415,7 @@ export default function NavbarMain() {
         </ul>
       </div>
 
+      {/* Mobile overlay */}
       {isMenuOpen && <div className="fixed inset-0 z-40 md:hidden" onClick={() => setIsMenuOpen(false)} />}
 
       {/* Mobile Drawer */}
@@ -455,7 +442,6 @@ export default function NavbarMain() {
             </ul>
           </nav>
 
-          {/* Mobile categories list */}
           {categories.length > 0 && (
             <div className="mb-6">
               <h3 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Categories</h3>
@@ -502,17 +488,22 @@ export default function NavbarMain() {
                     <p className="text-xs text-gray-400 truncate">{user.email}</p>
                   </div>
                 </div>
-                {[
-                  { href: '/cart',       icon: '/icons/cart.svg',      label: 'Cart'          },
-                  { href: '/orders',     icon: '/icons/orders.svg',    label: 'My Orders'     },
-                  { href: '/favourites', icon: '/icons/favourite.svg', label: 'My Favourites' },
-                ].map(link => (
-                  <Link key={link.href} href={link.href} onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-3 py-3 px-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 hover:text-black transition-all duration-200">
-                    <img src={link.icon} alt={link.label} width={20} height={20} />
-                    {link.label}
-                  </Link>
-                ))}
+                {/* Ссылки для авторизованного пользователя: для корзины используем ShoppingCart вместо cart.svg */}
+                <Link href="/cart" onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 py-3 px-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 hover:text-black transition-all duration-200">
+                  <ShoppingCart size={20} />
+                  Cart
+                </Link>
+                <Link href="/orders" onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 py-3 px-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 hover:text-black transition-all duration-200">
+                  <img src="/icons/orders.svg" alt="Orders" width={20} height={20} />
+                  My Orders
+                </Link>
+                <Link href="/favourites" onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 py-3 px-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 hover:text-black transition-all duration-200">
+                  <img src="/icons/favourite.svg" alt="Favourites" width={20} height={20} />
+                  My Favourites
+                </Link>
                 <button onClick={() => { logout(); setIsMenuOpen(false); }}
                   className="flex items-center gap-3 py-3 px-3 text-red-500 font-medium rounded-lg hover:bg-[#FFCAB3]/30 transition-all duration-200 mt-1">
                   <LogOut size={20} />
@@ -521,20 +512,34 @@ export default function NavbarMain() {
               </div>
             ) : (
               <ul className="flex flex-col gap-1">
-                {[
-                  { href: "/favourites", label: "Favourite", icon: "/icons/favourite.svg" },
-                  { href: "/cart",       label: "Cart",      icon: "/icons/cart.svg"      },
-                  { href: "/orders",     label: "Orders",    icon: "/icons/orders.svg"    },
-                  { href: "/login",      label: "Sign in",   icon: "/icons/auth.svg"      },
-                ].map((link) => (
-                  <li key={link.href}>
-                    <Link href={link.href} onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 py-3 px-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 hover:text-black transition-all duration-200">
-                      <img src={link.icon} alt={link.label} width={20} height={20} />
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
+                <li>
+                  <Link href="/favourites" onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 py-3 px-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 hover:text-black transition-all duration-200">
+                    <img src="/icons/favourite.svg" alt="Favourite" width={20} height={20} />
+                    Favourite
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cart" onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 py-3 px-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 hover:text-black transition-all duration-200">
+                    <ShoppingCart size={20} />
+                    Cart
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/orders" onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 py-3 px-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 hover:text-black transition-all duration-200">
+                    <img src="/icons/orders.svg" alt="Orders" width={20} height={20} />
+                    Orders
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/login" onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 py-3 px-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 hover:text-black transition-all duration-200">
+                    <img src="/icons/auth.svg" alt="Sign in" width={20} height={20} />
+                    Sign in
+                  </Link>
+                </li>
               </ul>
             )}
           </div>
