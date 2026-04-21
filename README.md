@@ -26,7 +26,7 @@ A production-ready headless e-commerce platform that replaces the traditional Wo
 ## Architecture Diagrams
 
 ### System Context
-<img src="documentation/diagrams/png/Headless E-Commerce System Context.png" alt="System Context" width="600">
+<img src="documentation/diagrams/png/" alt="System Context" width="600">
 
 ### Container Diagram
 <img src="documentation/diagrams/png/Headless E-Commerce Container Diagram.png" alt="Container Diagram" width="600">
@@ -443,4 +443,3 @@ npx dotenv-cli -e .env.local -- npx tsx scripts/import-blog-to-wp.ts
 ## License
 
 © 2025–2026 Ilyas Salimov. All rights reserved.  
-Telegram: [@Ilyas_ones](https://t.me/Ilyas_ones)
