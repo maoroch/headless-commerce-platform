@@ -1,62 +1,119 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Package, MapPin, Calendar, CreditCard, Truck, Clock, CheckCircle, XCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  Package,
+  MapPin,
+  Calendar,
+  CreditCard,
+  Truck,
+  Clock,
+  CheckCircle,
+  XCircle,
+  MessageSquare,
+} from 'lucide-react';
 import { getOrderById } from '@/lib/wordpress';
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; icon: React.ReactNode }> = {
-  processing: { 
-    label: 'Processing', 
-    bg: 'bg-yellow-100', 
-    text: 'text-yellow-700',
-    icon: <Clock size={14} className="text-yellow-600" />
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; dot: string; badge: string; text: string; icon: React.ReactNode }
+> = {
+  processing: {
+    label: 'Processing',
+    dot: 'bg-amber-400',
+    badge: 'bg-amber-50 border-amber-200',
+    text: 'text-amber-700',
+    icon: <Clock size={13} />,
   },
-  'on-hold': { 
-    label: 'On Hold', 
-    bg: 'bg-yellow-100', 
-    text: 'text-yellow-700',
-    icon: <Clock size={14} className="text-yellow-600" />
+  'on-hold': {
+    label: 'On Hold',
+    dot: 'bg-amber-400',
+    badge: 'bg-amber-50 border-amber-200',
+    text: 'text-amber-700',
+    icon: <Clock size={13} />,
   },
-  completed: { 
-    label: 'Delivered', 
-    bg: 'bg-[#B3E5C9]', 
-    text: 'text-green-800',
-    icon: <CheckCircle size={14} className="text-green-600" />
+  completed: {
+    label: 'Delivered',
+    dot: 'bg-emerald-500',
+    badge: 'bg-emerald-50 border-emerald-200',
+    text: 'text-emerald-700',
+    icon: <CheckCircle size={13} />,
   },
-  pending: { 
-    label: 'Pending', 
-    bg: 'bg-[#B3E5C9]/60', 
-    text: 'text-green-700',
-    icon: <Clock size={14} className="text-green-600" />
+  pending: {
+    label: 'Pending',
+    dot: 'bg-emerald-400',
+    badge: 'bg-emerald-50 border-emerald-200',
+    text: 'text-emerald-700',
+    icon: <Clock size={13} />,
   },
-  cancelled: { 
-    label: 'Cancelled', 
-    bg: 'bg-[#FFCAB3]', 
-    text: 'text-red-700',
-    icon: <XCircle size={14} className="text-red-500" />
+  cancelled: {
+    label: 'Cancelled',
+    dot: 'bg-red-400',
+    badge: 'bg-red-50 border-red-200',
+    text: 'text-red-600',
+    icon: <XCircle size={13} />,
   },
-  refunded: { 
-    label: 'Refunded', 
-    bg: 'bg-[#FFCAB3]', 
-    text: 'text-red-700',
-    icon: <XCircle size={14} className="text-red-500" />
+  refunded: {
+    label: 'Refunded',
+    dot: 'bg-red-400',
+    badge: 'bg-red-50 border-red-200',
+    text: 'text-red-600',
+    icon: <XCircle size={13} />,
   },
-  failed: { 
-    label: 'Failed', 
-    bg: 'bg-[#FFCAB3]', 
-    text: 'text-red-700',
-    icon: <XCircle size={14} className="text-red-500" />
+  failed: {
+    label: 'Failed',
+    dot: 'bg-red-400',
+    badge: 'bg-red-50 border-red-200',
+    text: 'text-red-600',
+    icon: <XCircle size={13} />,
   },
 };
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
+}
+
+function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`bg-white rounded-2xl border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)] ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+function CardHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+  return (
+    <div className="flex items-center gap-2.5 px-6 py-4 border-b border-gray-100">
+      <span className="text-gray-400">{icon}</span>
+      <h2 className="font-semibold text-sm text-gray-800 tracking-wide uppercase">{title}</h2>
+    </div>
+  );
+}
+
+function SummaryRow({
+  label, value, highlight, bold,
+}: {
+  label: string; value: string; highlight?: boolean; bold?: boolean;
+}) {
+  return (
+    <div className={`flex justify-between items-center text-sm ${bold ? 'font-semibold text-gray-900' : ''}`}>
+      <span className={bold ? 'text-gray-900' : 'text-gray-500'}>{label}</span>
+      <span className={highlight ? 'text-emerald-600 font-medium' : bold ? '' : 'text-gray-900 font-medium'}>
+        {value}
+      </span>
+    </div>
+  );
 }
 
 export default async function ViewOrderPage({ params }: Props) {
@@ -64,14 +121,14 @@ export default async function ViewOrderPage({ params }: Props) {
   const order = await getOrderById(id);
   if (!order) return notFound();
 
-  const status = STATUS_CONFIG[order.status] ?? { 
-    label: order.status, 
-    bg: 'bg-gray-100', 
-    text: 'text-gray-700',
-    icon: <Package size={14} className="text-gray-500" />
+  const status = STATUS_CONFIG[order.status] ?? {
+    label: order.status,
+    dot: 'bg-gray-400',
+    badge: 'bg-gray-50 border-gray-200',
+    text: 'text-gray-600',
+    icon: <Package size={13} />,
   };
-  
-  // Безопасное получение адреса доставки
+
   const shipping = order.shipping || {};
   const addressParts = [
     shipping.address_1,
@@ -80,136 +137,140 @@ export default async function ViewOrderPage({ params }: Props) {
     shipping.postcode,
     shipping.country,
   ].filter(Boolean);
-  const address = addressParts.length > 0 ? addressParts.join(', ') : 'No shipping address provided';
-  
-  const hasShippingInfo = shipping.first_name || shipping.last_name || address !== 'No shipping address provided';
+  const address = addressParts.length > 0 ? addressParts.join(', ') : null;
+  const hasShippingInfo = shipping.first_name || shipping.last_name || address;
 
   const total = parseFloat(order.total).toFixed(2);
   const subtotal = total;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="px-4 sm:px-6 lg:px-15 py-8 sm:py-12 lg:py-16 mt-32">
-        <div className="max-w-5xl mx-auto">
-          <Link 
-            href="/orders" 
-            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-black transition-colors mb-6 group"
-          >
-            <ArrowLeft size={15} className="group-hover:-translate-x-1 transition-transform duration-200" />
-            Back to Orders
-          </Link>
+    <div className="min-h-screen">
+      {/*
+        Navbar — две строки:
+          1) logo + search + icons : py-6 ≈ 72px
+          2) nav links row         : py-4 ≈ 48px
+          border-b                 : 1px
+        Итого ~121px. pt-[136px] = небольшой визуальный отступ под navbar.
+        Если navbar у вас другой высоты — измените это значение.
+      */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 mt-13 pt-[136px] pb-12">
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Order #{order.id}</h1>
-                <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-                  <Calendar size={14} />
-                  <span>{formatDate(order.date_created)}</span>
-                </div>
-              </div>
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${status.bg} ${status.text}`}>
-                {status.icon}
-                {status.label}
-              </div>
+        <Link
+          href="/orders"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors mb-8 group"
+        >
+          <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform duration-150" />
+          Back to Orders
+        </Link>
+
+        {/* Order header */}
+        <Card className="px-6 py-5 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Order #{order.id}</h1>
+            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-400">
+              <Calendar size={12} />
+              <span>{formatDate(order.date_created)}</span>
             </div>
           </div>
+          <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold border ${status.badge} ${status.text} self-start sm:self-auto`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+            {status.icon}
+            {status.label}
+          </div>
+        </Card>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
-                  <h2 className="font-bold text-lg flex items-center gap-2">
-                    <Package size={18} className="text-gray-500" />
-                    Items
-                  </h2>
-                </div>
-                <div className="divide-y divide-gray-100">
-                  {order.line_items.map((item: any) => (
-                    <div key={item.id} className="p-6 sm:p-8 flex gap-5">
-                      <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                        {item.image?.src ? (
-                          <Image src={item.image.src} alt={item.name} fill sizes="80px" className="object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-3xl">🌿</div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-900">{item.name}</div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-gray-500">
-                          <span>Qty: {item.quantity}</span>
-                          <span>${item.price} each</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-gray-900">${parseFloat(item.total).toFixed(2)}</p>
-                      </div>
+        {/* Main grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+          {/* Left */}
+          <div className="lg:col-span-2 space-y-5">
+            <Card>
+              <CardHeader icon={<Package size={15} />} title="Items" />
+              <ul className="divide-y divide-gray-50">
+                {order.line_items.map((item: any) => (
+                  <li key={item.id} className="flex items-start gap-4 px-6 py-5">
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-100">
+                      {item.image?.src ? (
+                        <Image src={item.image.src} alt={item.name} fill sizes="64px" className="object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-2xl">🌿</div>
+                      )}
                     </div>
-                  ))}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 leading-snug truncate">{item.name}</p>
+                      <p className="text-xs text-gray-400 mt-1">Qty: {item.quantity} · ${item.price} each</p>
+                    </div>
+                    <p className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                      ${parseFloat(item.total).toFixed(2)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+
+            {hasShippingInfo && (
+              <Card className="px-6 py-5">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <MapPin size={15} className="text-gray-400" />
+                  <h2 className="font-semibold text-sm text-gray-800 tracking-wide uppercase">Shipping Address</h2>
+                </div>
+                <div className="text-sm text-gray-600 space-y-1">
+                  {(shipping.first_name || shipping.last_name) && (
+                    <p className="font-semibold text-gray-800">
+                      {[shipping.first_name, shipping.last_name].filter(Boolean).join(' ')}
+                    </p>
+                  )}
+                  {address && <p>{address}</p>}
+                  {shipping.phone && <p className="text-gray-400">{shipping.phone}</p>}
+                </div>
+              </Card>
+            )}
+          </div>
+
+          {/* Right */}
+          <div className="space-y-5">
+            <Card className="px-6 py-5">
+              <h2 className="font-semibold text-sm text-gray-800 tracking-wide uppercase mb-4">Order Summary</h2>
+              <div className="space-y-3">
+                <SummaryRow label="Subtotal" value={`$${subtotal}`} />
+                <SummaryRow label="Shipping" value="Free" highlight />
+                <div className="border-t border-gray-100 pt-3">
+                  <SummaryRow label="Total" value={`$${total}`} bold />
                 </div>
               </div>
+            </Card>
 
-              {/* Блок адреса доставки — показываем только если есть данные */}
-              {hasShippingInfo && (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-                  <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
-                    <MapPin size={18} className="text-gray-500" />
-                    Shipping Address
-                  </h2>
-                  <div className="text-gray-700 space-y-1">
-                    {(shipping.first_name || shipping.last_name) && (
-                      <p className="font-medium">{shipping.first_name} {shipping.last_name}</p>
-                    )}
-                    <p>{address}</p>
-                    {shipping.phone && <p className="text-gray-500 text-sm">{shipping.phone}</p>}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-6">
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-                <h2 className="font-bold text-lg mb-5">Order Summary</h2>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Subtotal</span>
-                    <span className="font-medium">${subtotal}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Shipping</span>
-                    <span className="text-green-600 font-medium">Free</span>
-                  </div>
-                  <div className="border-t border-gray-100 pt-3 mt-3 flex justify-between font-bold text-base">
-                    <span>Total</span>
-                    <span>${total}</span>
-                  </div>
-                </div>
+            <Card className="px-6 py-5">
+              <div className="flex items-center gap-2.5 mb-3">
+                <CreditCard size={15} className="text-gray-400" />
+                <h2 className="font-semibold text-sm text-gray-800 tracking-wide uppercase">Payment</h2>
               </div>
+              <p className="text-sm text-gray-600">
+                {order.payment_method_title || order.payment_method || 'Bank Transfer'}
+              </p>
+            </Card>
 
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-                <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
-                  <CreditCard size={18} className="text-gray-500" />
-                  Payment
-                </h2>
-                <p className="text-gray-700 text-sm">
-                  {order.payment_method_title || order.payment_method || 'Bank Transfer'}
-                </p>
-              </div>
-
-              {order.customer_note && (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-                  <h2 className="font-bold text-lg mb-2">Note</h2>
-                  <p className="text-gray-600 text-sm">{order.customer_note}</p>
+            {order.customer_note && (
+              <Card className="px-6 py-5">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <MessageSquare size={15} className="text-gray-400" />
+                  <h2 className="font-semibold text-sm text-gray-800 tracking-wide uppercase">Note</h2>
                 </div>
-              )}
+                <p className="text-sm text-gray-500 leading-relaxed">{order.customer_note}</p>
+              </Card>
+            )}
 
-              <div className="bg-[#B3E5C9]/30 rounded-2xl p-6 text-center">
-                <Truck size={24} className="mx-auto text-gray-600 mb-2" />
-                <p className="text-sm font-medium text-gray-800">Need help?</p>
-                <p className="text-xs text-gray-500 mt-1">Contact our support team for any questions about your order.</p>
+            <div className="rounded-2xl bg-emerald-50/70 border border-emerald-100 px-6 py-5 text-center">
+              <div className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-emerald-100 mb-3">
+                <Truck size={16} className="text-emerald-600" />
               </div>
+              <p className="text-sm font-semibold text-gray-800">Need help?</p>
+              <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                Contact our support team for any questions about your order.
+              </p>
             </div>
           </div>
+
         </div>
       </div>
     </div>
