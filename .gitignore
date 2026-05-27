@@ -1,41 +1,80 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+# =========================
+# OS
+# =========================
 .DS_Store
-*.pem
+Thumbs.db
 
-# debug
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+*.log
+
+# volumes / runtime data (НЕ КОММИТИТЬ)
+db_data/
+*.sqlite
+*.sqlite3
+
+# =========================
+# WordPress (важно)
+# =========================
+backend/wordpress/wp-content/uploads/*
+!backend/wordpress/wp-content/uploads/.gitkeep
+
+backend/wordpress/wp-content/cache/
+backend/wordpress/wp-content/upgrade/
+
+# если будешь ставить плагины локально
+backend/wordpress/wp-content/plugins/*
+!backend/wordpress/wp-content/plugins/.gitkeep
+
+backend/wordpress/wp-content/themes/*
+!backend/wordpress/wp-content/themes/.gitkeep
+
+# =========================
+# Env files
+# =========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =========================
+# Node / Next.js
+# =========================
+node_modules/
+.next/
+out/
+dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# =========================
+# Next.js env
+# =========================
+frontend/**/.env
+frontend/**/.env.local
 
-# vercel
-.vercel
+# =========================
+# uploads zip (если используешь вариант с архивом)
+# =========================
+uploads.zip
+*.zip
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# backups / dumps
+# =========================
+*.sql
+*.dump
+
+# но если хочешь seed.sql хранить:
+!docker/mysql/seed.sql
