@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-const WP_URL = process.env.WORDPRESS_URL || 'https://coom-endem-server.local';
+const WP_URL = process.env.WORDPRESS_URL || 'http://localhost:8080';
 const WC_KEY = process.env.WC_CONSUMER_KEY;
 const WC_SECRET = process.env.WC_CONSUMER_SECRET;
 const JWT_SECRET = process.env.JWT_AUTH_SECRET;

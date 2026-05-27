@@ -2,7 +2,7 @@
 // WordPress REST API + WooCommerce utilities
 // При деплое замени WORDPRESS_URL в .env.local на реальный домен
 
-const WP_BASE = process.env.WORDPRESS_URL ?? 'https://coom-endem-server.local';
+const WP_BASE = process.env.WORDPRESS_URL ?? 'http://localhost:8080';
 const WC_KEY = process.env.WC_CONSUMER_KEY ?? '';
 const WC_SECRET = process.env.WC_CONSUMER_SECRET ?? '';
 
@@ -96,7 +96,14 @@ async function wpFetch<T>(url: string, revalidate = 3600): Promise<T> {
   if (!res.ok) {
     throw new Error(`WordPress fetch error ${res.status}: ${url}`);
   }
-  return res.json() as Promise<T>;
+  
+  // Globally replace internal WordPress URL with public URL in the response JSON string
+  const text = await res.text();
+  const wpPublicUrl = process.env.NEXT_PUBLIC_WORDPRESS_URL || 'http://localhost:8080';
+  const matches = (text.match(/https?:\\?\/\\?\/(wordpress|server-coomendem\.local)(:[0-9]+)?/g) || []).length;
+  console.log(`[wpFetch] Fetched: ${url} | Found ${matches} internal URLs. Replacing with: ${wpPublicUrl}`);
+  const updatedText = text.replace(/https?:\\?\/\\?\/(wordpress|server-coomendem\.local)(:[0-9]+)?/g, wpPublicUrl);
+  return JSON.parse(updatedText) as T;
 }
 
 function wcUrl(path: string, params: Record<string, string> = {}): string {
@@ -168,19 +175,7 @@ export async function getProducts(
 
 export async function getProductBySlug(slug: string): Promise<WCProduct | null> {
   try {
-    const url = wcUrl('/products', { slug, per_page: '1' });
-    console.log('Fetching product by slug:', url); // Для отладки
-    
-    const res = await fetch(url, { 
-      next: { revalidate: 3600 } 
-    });
-    
-    if (!res.ok) {
-      console.error(`Product fetch failed with status ${res.status}: ${res.statusText}`);
-      return null;
-    }
-    
-    const products = await res.json() as WCProduct[];
+    const products = await wpFetch<WCProduct[]>(wcUrl('/products', { slug, per_page: '1' }));
     return products[0] ?? null;
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -203,7 +198,7 @@ export async function getSaleProducts(): Promise<WCProduct[]> {
 
 export async function getCategories(): Promise<WCCategory[]> {
   return wpFetch<WCCategory[]>(
-    wcUrl('/products/categories', { per_page: '20'})
+    wcUrl('/products/categories', { per_page: '20' })
   );
 }
 

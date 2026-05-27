@@ -5,7 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const WP_URL = process.env.WORDPRESS_URL || 'https://coom-endem-server.local';
+const WP_URL = process.env.WORDPRESS_URL || 'http://localhost:8080';
 const WP_USER = process.env.WP_USER ?? 'admin';
 const WP_APP_PASSWORD = process.env.WP_APP_PASSWORD ?? '';
 
@@ -176,22 +176,22 @@ async function importPosts(): Promise<void> {
     const postDate = new Date(post.date).toISOString();
 
     const body = {
-      title:      post.title,
-      slug:       post.slug,
-      content:    contentToHtml(post.content),
-      excerpt:    post.excerpt,
-      status:     'publish',
-      date:       postDate,
-      date_gmt:   postDate,
-      sticky:     post.featured,
+      title: post.title,
+      slug: post.slug,
+      content: contentToHtml(post.content),
+      excerpt: post.excerpt,
+      status: 'publish',
+      date: postDate,
+      date_gmt: postDate,
+      sticky: post.featured,
       categories: [categoryId],    // number[]
-      tags:       tagIds,          // number[]
+      tags: tagIds,          // number[]
     };
 
     const res = await fetch(`${WP_URL}/wp-json/wp/v2/posts`, {
       method: 'POST',
       headers: {
-        Authorization:  `Basic ${AUTH}`,
+        Authorization: `Basic ${AUTH}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),

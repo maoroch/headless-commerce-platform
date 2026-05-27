@@ -4,7 +4,7 @@ if (process.env.NODE_ENV === 'development') {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 }
 
-const WC_URL = process.env.WORDPRESS_URL ?? 'https://coom-endem-server.local';
+const WC_URL = process.env.WORDPRESS_URL ?? 'http://localhost:8080';
 const WC_KEY = process.env.WC_CONSUMER_KEY ?? '';
 const WC_SECRET = process.env.WC_CONSUMER_SECRET ?? '';
 

@@ -10,21 +10,45 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'coom-endem-server.local',
+        protocol: 'http',
+        hostname: 'wordpress',
         port: '',
         pathname: '/wp-content/uploads/**',
       },
       {
         protocol: 'http',
-        hostname: 'coom-endem-server.local',
+        hostname: 'localhost',
+        port: '8080',
+        pathname: '/wp-content/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'server-coomendem.local',
+        port: '',
+        pathname: '/wp-content/uploads/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'server-coomendem.local',
+        port: '',
+        pathname: '/wp-content/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'http://localhost:8080',
+        port: '',
+        pathname: '/wp-content/uploads/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'http://localhost:8080',
         port: '',
         pathname: '/wp-content/uploads/**',
       },
     ],
-    unoptimized: process.env.NODE_ENV === 'development',
+    unoptimized: true,
   },
-  
+
 };
 
 export default nextConfig;

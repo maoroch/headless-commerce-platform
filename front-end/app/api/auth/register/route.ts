@@ -4,7 +4,7 @@ if (process.env.NODE_ENV === 'development') {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 }
 
-const WP = process.env.WORDPRESS_URL ?? 'https://coom-endem-server.local';
+const WP = process.env.WORDPRESS_URL ?? 'http://localhost:8080';
 const WC_KEY = process.env.WC_CONSUMER_KEY ?? '';
 const WC_SECRET = process.env.WC_CONSUMER_SECRET ?? '';
 
@@ -20,10 +20,10 @@ export async function POST(req: NextRequest) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           first_name: firstName,
-          last_name:  lastName,
+          last_name: lastName,
           email,
           password,
-          username:   email,
+          username: email,
         }),
         cache: 'no-store',
       }
@@ -68,10 +68,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       token,
       user: {
-        id:          me.id,
-        email:       me.email ?? email,
-        firstName:   me.first_name ?? firstName,
-        lastName:    me.last_name ?? lastName,
+        id: me.id,
+        email: me.email ?? email,
+        firstName: me.first_name ?? firstName,
+        lastName: me.last_name ?? lastName,
         displayName: me.name ?? `${firstName} ${lastName}`,
       },
     });

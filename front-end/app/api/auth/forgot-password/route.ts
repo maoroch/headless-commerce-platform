@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const WP_URL = process.env.WORDPRESS_URL || 'https://coom-endem-server.local';
+const WP_URL = process.env.WORDPRESS_URL || 'http://localhost:8080';
 
 export async function POST(req: NextRequest) {
   try {

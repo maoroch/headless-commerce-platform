@@ -127,7 +127,15 @@ if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strpos($_SERVER['HTTP_X_FORWARD
 if ($configExtra = getenv_docker('WORDPRESS_CONFIG_EXTRA', '')) {
 	eval($configExtra);
 }
-
+// Динамическое определение URL для работы в Docker и с локальными доменами
+if (isset($_SERVER['HTTP_HOST'])) {
+    $http_protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+    define('WP_HOME', $http_protocol . '://' . $_SERVER['HTTP_HOST']);
+    define('WP_SITEURL', $http_protocol . '://' . $_SERVER['HTTP_HOST']);
+} else {
+    define('WP_HOME', 'http://localhost:8080');
+    define('WP_SITEURL', 'http://localhost:8080');
+}
 /* That's all, stop editing! Happy publishing. */
 
 /** Absolute path to the WordPress directory. */

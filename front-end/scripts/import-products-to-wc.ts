@@ -7,7 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const WP_URL = process.env.WORDPRESS_URL || 'https://coom-endem-server.local';
+const WP_URL = process.env.WORDPRESS_URL || 'http://localhost:8080';
 const WC_KEY = process.env.WC_CONSUMER_KEY ?? '';
 const WC_SECRET = process.env.WC_CONSUMER_SECRET ?? '';
 const WC = `${WP_URL}/wp-json/wc/v3`;
@@ -168,17 +168,17 @@ async function importProducts(): Promise<void> {
 
     // Тело запроса для WooCommerce
     const body: Record<string, unknown> = {
-      name:              product.name,
+      name: product.name,
       slug,
-      type:              'simple',
-      status:            'publish',
-      description:       `<p>${product.fullDescription}</p>`,
+      type: 'simple',
+      status: 'publish',
+      description: `<p>${product.fullDescription}</p>`,
       short_description: `<p>${product.description}</p>`,
-      regular_price:     String(product.price),
-      manage_stock:      false,
-      stock_status:      'instock',
-      categories:        categoryId ? [{ id: categoryId }] : [],
-      tags:              tagIds,
+      regular_price: String(product.price),
+      manage_stock: false,
+      stock_status: 'instock',
+      categories: categoryId ? [{ id: categoryId }] : [],
+      tags: tagIds,
       // Изображения: WooCommerce не принимает локальные /img/ пути —
       // после импорта загрузи картинки вручную через WP Admin → Media
       // и назначь через Edit Product → Product image
