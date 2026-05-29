@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const token: string = tokenData.token;
+    const token: string = tokenData.token || tokenData.data?.token;
 
     // 3. Получаем профиль
     const meRes = await fetch(`${WP}/wp-json/wp/v2/users/me`, {

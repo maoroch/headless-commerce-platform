@@ -50,9 +50,14 @@ export async function GET(request: NextRequest) {
   try {
     const res = await fetch(url.toString(), { cache: 'no-store' });
     const text = await res.text(); // читаем как текст, чтобы потом распарсить JSON
+
+    // Replace internal WordPress URLs with public-facing ones
+    const wpPublicUrl = process.env.NEXT_PUBLIC_WORDPRESS_URL || 'http://localhost:8080';
+    const updatedText = text.replace(/https?:\\?\/\\?\/(wordpress|server-coomendem\.local)(:[0-9]+)?/g, wpPublicUrl);
+
     let data;
     try {
-      data = JSON.parse(text);
+      data = JSON.parse(updatedText);
     } catch (e) {
       console.error('Invalid JSON response:', text);
       return NextResponse.json({ error: 'Invalid response from WooCommerce' }, { status: 500 });

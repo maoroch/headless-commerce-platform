@@ -136,6 +136,9 @@ if (isset($_SERVER['HTTP_HOST'])) {
     define('WP_HOME', 'http://localhost:8080');
     define('WP_SITEURL', 'http://localhost:8080');
 }
+define( 'JWT_AUTH_SECRET_KEY', 'K8mP2xQvR9n9349534KJFEKEF3929023L4jH7wE1tY6uI3oA5sD0f' );
+define( 'JWT_AUTH_SECRET', 'K8mP2xQvR9n9349534KJFEKEF3929023L4jH7wE1tY6uI3oA5sD0f' );
+define( 'JWT_AUTH_CORS_ENABLE', true );
 /* That's all, stop editing! Happy publishing. */
 
 /** Absolute path to the WordPress directory. */

@@ -30,7 +30,30 @@ fi
 
 # Enable pretty permalinks (crucial for WooCommerce REST API /wp-json/ endpoints to work)
 echo "🔗 Configuring Permalinks..."
-wp rewrite structure '/%postname%/' --hard --allow-root
+wp rewrite structure '/%postname%/' --allow-root
+
+echo "🔐 Installing JWT Auth Plugin..."
+wp plugin install jwt-auth --activate --allow-root || true
+# Настраиваем константы для JWT в wp-config.php
+wp config set JWT_AUTH_SECRET 'K8mP2xQvR9n9349534KJFEKEF3929023L4jH7wE1tY6uI3oA5sD0f' --type=constant --allow-root || true
+wp config set JWT_AUTH_SECRET_KEY 'K8mP2xQvR9n9349534KJFEKEF3929023L4jH7wE1tY6uI3oA5sD0f' --type=constant --allow-root || true
+wp config set JWT_AUTH_CORS_ENABLE true --type=constant --raw --allow-root || true
+
+# Create complete .htaccess for WordPress routing & HTTP Authorization Header
+cat << 'EOF' > /var/www/html/.htaccess
+# BEGIN WordPress
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
+# END WordPress
+EOF
+chown www-data:www-data /var/www/html/.htaccess
 
 # Extract uploaded assets if available and not already unpacked
 if [ -f /docker-assets/uploads/uploads.zip ]; then

@@ -54,7 +54,18 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(orderData),
     });
 
-    const order = await res.json();
+    const text = await res.text();
+    const wpPublicUrl = process.env.NEXT_PUBLIC_WORDPRESS_URL || 'http://localhost:8080';
+    const updatedText = text.replace(/https?:\\?\/\\?\/(wordpress|server-coomendem\.local)(:[0-9]+)?/g, wpPublicUrl);
+
+    let order;
+    try {
+      order = JSON.parse(updatedText);
+    } catch (e) {
+      console.error('Invalid JSON response:', text);
+      return NextResponse.json({ error: 'Invalid response from WooCommerce' }, { status: 500 });
+    }
+
     if (!res.ok) {
       console.error('WooCommerce error:', order);
       return NextResponse.json({ error: order.message || 'Failed to create order' }, { status: res.status });

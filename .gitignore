@@ -78,3 +78,5 @@ uploads.zip
 
 # но если хочешь seed.sql хранить:
 !docker/mysql/seed.sql
+temp_auto_push.bat
+temp_interactive_push.bat

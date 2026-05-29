@@ -108,6 +108,31 @@ export const pageMetadata = {
     description:
       'Learn how we collect, use, and protect your personal information.',
   },
+  support: {
+    title: 'Get Help & Support',
+    description:
+      'Find answers to your questions, contact customer support, and get assistance with your Coom Endem account.',
+  },
+  faq: {
+    title: 'Frequently Asked Questions',
+    description:
+      'Browse our FAQ to find quick answers about shipping, products, payments, and orders.',
+  },
+  contact: {
+    title: 'Contact Us',
+    description:
+      'Get in touch with the Coom Endem team for inquiries, feedback, or customer support.',
+  },
+  'business-contact': {
+    title: 'Contact Sales & Partnerships',
+    description:
+      'Reach out to our business development team for bulk orders, wholesale partnerships, and corporate inquiries.',
+  },
+  'business-faq': {
+    title: 'Business & Wholesale FAQ',
+    description:
+      'Find answers to questions about wholesale orders, vendor accounts, bulk shipping, and business accounts.',
+  },
 } as const;
 
 // Тип для ключей страниц
