@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_AUTH_SECRET;
 
 export async function POST(req: NextRequest) {
   try {
-    const { billing, line_items, payment_method, customer_note, shipping } = await req.json();
+    const { billing, line_items, payment_method, transaction_id, customer_note, shipping } = await req.json();
 
     // 1. Пытаемся получить customer_id из JWT
     const authHeader = req.headers.get('authorization');
@@ -31,13 +31,17 @@ export async function POST(req: NextRequest) {
 
     const orderData: any = {
       payment_method: payment_method || 'bacs',
-      payment_method_title: payment_method === 'bacs' ? 'Direct Bank Transfer' : 'Cash on Delivery',
-      set_paid: false,
+      payment_method_title: payment_method === 'paypal' ? 'PayPal' : (payment_method === 'bacs' ? 'Direct Bank Transfer' : 'Cash on Delivery'),
+      set_paid: payment_method === 'paypal' && transaction_id ? true : false,
       billing,
       shipping,
       line_items,
       customer_note: customer_note || '',
     };
+
+    if (transaction_id) {
+      orderData.transaction_id = transaction_id;
+    }
 
     // 2. Если пользователь авторизован – привязываем заказ
     if (customerId > 0) {

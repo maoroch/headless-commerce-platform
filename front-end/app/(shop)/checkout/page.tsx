@@ -6,12 +6,14 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useCart } from '@/context/Cartcontext';
 import { useAuth } from '@/context/Authcontext';
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 export default function CheckoutPage() {
   const { token } = useAuth();
   const { items, totalPrice, clearCart } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'bacs' | 'paypal'>('bacs');
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
@@ -69,7 +71,7 @@ const res = await fetch('/api/create-order', {
       product_id: item.product.id,
       quantity: item.quantity,
     })),
-    payment_method: 'bacs',
+    payment_method: paymentMethod,
     customer_note: 'Thank you for your order!',
   }),
 });
@@ -190,13 +192,100 @@ const res = await fetch('/api/create-order', {
                 </div>
               </div>
 
-              <button type="submit" disabled={loading}
-                className="group w-full border border-black rounded-full flex items-center justify-between pl-6 pr-2 py-2 mt-4 transition-all duration-300 ease-out hover:bg-black hover:text-white active:scale-95 disabled:opacity-60">
-                <span className="text-sm font-bold tracking-wide">{loading ? 'Processing…' : 'Place Order'}</span>
-                <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center group-hover:bg-white transition-all duration-300 flex-shrink-0">
-                  <ArrowRight size={18} className="text-white group-hover:text-black transition-colors duration-300 group-hover:translate-x-0.5" />
+              <div className="mt-6">
+                <label className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-3 block">Payment Method</label>
+                <div className="flex flex-col gap-3">
+                  <label className="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input type="radio" name="payment_method" value="bacs" checked={paymentMethod === 'bacs'} onChange={() => setPaymentMethod('bacs')} className="w-4 h-4 text-black focus:ring-black" />
+                    <span className="text-sm font-medium">Direct Bank Transfer</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input type="radio" name="payment_method" value="paypal" checked={paymentMethod === 'paypal'} onChange={() => setPaymentMethod('paypal')} className="w-4 h-4 text-black focus:ring-black" />
+                    <span className="text-sm font-medium">PayPal</span>
+                  </label>
                 </div>
-              </button>
+              </div>
+
+              {paymentMethod === 'bacs' ? (
+                <button type="submit" disabled={loading}
+                  className="group w-full border border-black rounded-full flex items-center justify-between pl-6 pr-2 py-2 mt-4 transition-all duration-300 ease-out hover:bg-black hover:text-white active:scale-95 disabled:opacity-60">
+                  <span className="text-sm font-bold tracking-wide">{loading ? 'Processing…' : 'Place Order'}</span>
+                  <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center group-hover:bg-white transition-all duration-300 flex-shrink-0">
+                    <ArrowRight size={18} className="text-white group-hover:text-black transition-colors duration-300 group-hover:translate-x-0.5" />
+                  </div>
+                </button>
+              ) : (
+                <div className="mt-4">
+                  <PayPalScriptProvider options={{ clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "test", currency: "USD" }}>
+                    <PayPalButtons
+                      style={{ layout: "vertical" }}
+                      createOrder={(data, actions) => {
+                        return actions.order.create({
+                          intent: "CAPTURE",
+                          purchase_units: [{
+                            amount: {
+                              value: totalPrice.toFixed(2),
+                              currency_code: "USD",
+                            },
+                          }],
+                        });
+                      }}
+                      onApprove={async (data, actions) => {
+                        if (!actions.order) return;
+                        setLoading(true);
+                        try {
+                          const details = await actions.order.capture();
+                          const res = await fetch('/api/create-order', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({
+                              billing: {
+                                first_name: form.first_name || details.payer?.name?.given_name,
+                                last_name: form.last_name || details.payer?.name?.surname,
+                                address_1: form.address_1,
+                                city: form.city,
+                                state: form.state,
+                                postcode: form.postcode,
+                                country: form.country,
+                                email: form.email || details.payer?.email_address,
+                                phone: form.phone,
+                              },
+                              shipping: {
+                                first_name: form.first_name || details.payer?.name?.given_name,
+                                last_name: form.last_name || details.payer?.name?.surname,
+                                address_1: form.address_1,
+                                city: form.city,
+                                state: form.state,
+                                postcode: form.postcode,
+                                country: form.country,
+                                phone: form.phone,
+                              },
+                              line_items: items.map(item => ({
+                                product_id: item.product.id,
+                                quantity: item.quantity,
+                              })),
+                              payment_method: 'paypal',
+                              transaction_id: details.id,
+                              customer_note: 'Paid via PayPal',
+                            }),
+                          });
+                          const responseData = await res.json();
+                          if (!res.ok) throw new Error(responseData.error || 'Order creation failed');
+                          clearCart();
+                          router.push(`/order-confirmation/${responseData.id}`);
+                        } catch (err: any) {
+                          alert(err.message);
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                    />
+                  </PayPalScriptProvider>
+                </div>
+              )}
             </form>
           </div>
 

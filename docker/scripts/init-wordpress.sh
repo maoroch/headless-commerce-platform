@@ -71,6 +71,10 @@ echo "🧩 Installing WooCommerce..."
 
 wp plugin install woocommerce --activate --force --allow-root || true
 
+echo "💳 Installing WooCommerce PayPal Payments..."
+
+wp plugin install woocommerce-paypal-payments --activate --allow-root || true
+
 echo "🎨 Theme..."
 
 wp theme install storefront --activate --force --allow-root || true
