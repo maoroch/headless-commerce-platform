@@ -169,7 +169,7 @@ export async function getProducts(
   params: Record<string, string> = {}
 ): Promise<WCProduct[]> {
   return wpFetch<WCProduct[]>(
-    wcUrl('/products', { per_page: '20', status: 'publish', ...params })
+    wcUrl('/products', { per_page: '20', ...params, status: 'publish' })
   );
 }
 
