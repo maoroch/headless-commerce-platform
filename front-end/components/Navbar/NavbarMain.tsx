@@ -291,6 +291,7 @@ export default function NavbarMain() {
       const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: abortController.current.signal });
       const data: SearchResult[] = await res.json();
       setResults(data); setIsDropdownOpen(true);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       if (e?.name !== 'AbortError') setResults([]);
     } finally { setIsLoading(false); }
