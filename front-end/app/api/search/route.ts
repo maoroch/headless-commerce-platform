@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
     }
     const products = await res.json();
     return NextResponse.json(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       products.map((p: any) => ({
         id: p.id,
         name: p.name,

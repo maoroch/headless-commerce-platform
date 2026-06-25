@@ -61,6 +61,7 @@ export default function ProductReviews({ productId }: { productId: number }) {
       setReviews(prev => [data, ...prev]);
       setComment('');
       setRating(5);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message);
     } finally {

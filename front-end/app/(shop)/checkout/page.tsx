@@ -6,12 +6,15 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useCart } from '@/context/Cartcontext';
 import { useAuth } from '@/context/Authcontext';
+import { PayPalButtons } from '@paypal/react-paypal-js';
+
 
 export default function CheckoutPage() {
   const { token } = useAuth();
   const { items, totalPrice, clearCart } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'bacs' | 'paypal'>('bacs');
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
@@ -26,6 +29,44 @@ export default function CheckoutPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handlePayPalApprove = async (data: unknown, actions: unknown) => {
+    try {
+      setLoading(true);
+      const details = await (actions as any).order.capture();
+
+      // Submit order to WooCommerce after successful PayPal capture
+      const res = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          billing: form,
+          shipping: form,
+          line_items: items.map(item => ({
+            product_id: item.product.id,
+            quantity: item.quantity,
+          })),
+          payment_method: 'paypal',
+          customer_note: 'Paid via PayPal (Transaction ID: ' + details.id + ')',
+        }),
+      });
+
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || 'Order creation failed');
+      clearCart();
+      router.push(`/order-confirmation/${resData.id}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      alert((err as Error).message);
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,7 +110,7 @@ const res = await fetch('/api/create-order', {
       product_id: item.product.id,
       quantity: item.quantity,
     })),
-    payment_method: 'bacs',
+    payment_method: paymentMethod,
     customer_note: 'Thank you for your order!',
   }),
 });
@@ -77,8 +118,10 @@ const res = await fetch('/api/create-order', {
       if (!res.ok) throw new Error(data.error || 'Order creation failed');
       clearCart();
       router.push(`/order-confirmation/${data.id}`);
-    } catch (err: any) {
-      alert(err.message);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      alert((err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -190,13 +233,52 @@ const res = await fetch('/api/create-order', {
                 </div>
               </div>
 
-              <button type="submit" disabled={loading}
-                className="group w-full border border-black rounded-full flex items-center justify-between pl-6 pr-2 py-2 mt-4 transition-all duration-300 ease-out hover:bg-black hover:text-white active:scale-95 disabled:opacity-60">
-                <span className="text-sm font-bold tracking-wide">{loading ? 'Processing…' : 'Place Order'}</span>
-                <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center group-hover:bg-white transition-all duration-300 flex-shrink-0">
-                  <ArrowRight size={18} className="text-white group-hover:text-black transition-colors duration-300 group-hover:translate-x-0.5" />
+
+              <div className="pt-4 border-t border-gray-100">
+                <label className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-3 block">Payment Method</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="payment_method" value="bacs" checked={paymentMethod === 'bacs'} onChange={() => setPaymentMethod('bacs')} className="accent-black" />
+                    <span className="text-sm font-medium">Bank Transfer</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="payment_method" value="paypal" checked={paymentMethod === 'paypal'} onChange={() => setPaymentMethod('paypal')} className="accent-black" />
+                    <span className="text-sm font-medium">PayPal</span>
+                  </label>
                 </div>
-              </button>
+              </div>
+
+              {paymentMethod === 'bacs' ? (
+                <button type="submit" disabled={loading}
+                  className="group w-full border border-black rounded-full flex items-center justify-between pl-6 pr-2 py-2 mt-4 transition-all duration-300 ease-out hover:bg-black hover:text-white active:scale-95 disabled:opacity-60">
+                  <span className="text-sm font-bold tracking-wide">{loading ? 'Processing…' : 'Place Order'}</span>
+                  <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center group-hover:bg-white transition-all duration-300 flex-shrink-0">
+                    <ArrowRight size={18} className="text-white group-hover:text-black transition-colors duration-300 group-hover:translate-x-0.5" />
+                  </div>
+                </button>
+              ) : (
+                <div className="mt-6 z-0 relative">
+                  <PayPalButtons
+                    style={{ layout: "vertical" }}
+                    disabled={loading}
+                    createOrder={(data, actions) => {
+                      return actions.order.create({
+                        intent: 'CAPTURE',
+                        purchase_units: [
+                          {
+                            amount: {
+                              currency_code: 'USD',
+                              value: totalPrice.toFixed(2),
+                            },
+                          },
+                        ],
+                      });
+                    }}
+                    onApprove={handlePayPalApprove}
+                  />
+                </div>
+              )}
+
             </form>
           </div>
 

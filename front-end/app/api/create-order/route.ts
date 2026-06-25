@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
 
     if (token && JWT_SECRET) {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const decoded = jwt.verify(token, JWT_SECRET) as any;
         // Структура токена зависит от плагина, обычно ID в decoded.data.user.id
         customerId = decoded?.data?.user?.id ?? decoded?.user_id ?? decoded?.id ?? 0;
@@ -29,10 +30,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const orderData: any = {
       payment_method: payment_method || 'bacs',
-      payment_method_title: payment_method === 'bacs' ? 'Direct Bank Transfer' : 'Cash on Delivery',
-      set_paid: false,
+      payment_method_title: payment_method === 'paypal' ? 'PayPal' : (payment_method === 'bacs' ? 'Direct Bank Transfer' : 'Cash on Delivery'),
+      set_paid: payment_method === 'paypal',
       billing,
       shipping,
       line_items,
