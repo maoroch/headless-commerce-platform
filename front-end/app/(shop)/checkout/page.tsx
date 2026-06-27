@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CreditCard, Building, ShieldCheck } from 'lucide-react';
 import { useCart } from '@/context/Cartcontext';
 import { useAuth } from '@/context/Authcontext';
 import { PayPalButtons } from '@paypal/react-paypal-js';
@@ -26,9 +26,41 @@ export default function CheckoutPage() {
     email: '',
     phone: '',
   });
+  const [formErrors, setFormErrors] = useState<Record<string, boolean>>({});
+
+  const validateForm = (showErrors = false): boolean => {
+    const requiredFields = [
+      'first_name',
+      'last_name',
+      'address_1',
+      'city',
+      'postcode',
+      'email',
+      'phone',
+    ];
+    const errors: Record<string, boolean> = {};
+    let isValid = true;
+
+    requiredFields.forEach(field => {
+      const val = form[field as keyof typeof form]?.trim() || '';
+      if (!val) {
+        errors[field] = true;
+        isValid = false;
+      }
+    });
+
+    if (showErrors) {
+      setFormErrors(errors);
+    }
+    return isValid;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (formErrors[name]) {
+      setFormErrors({ ...formErrors, [name]: false });
+    }
   };
 
 
@@ -74,6 +106,10 @@ export default function CheckoutPage() {
     if (items.length === 0) {
       alert('Your cart is empty');
       router.push('/shop');
+      return;
+    }
+    if (!validateForm(true)) {
+      alert('Please fill out all required fields.');
       return;
     }
     setLoading(true);
@@ -167,26 +203,38 @@ const res = await fetch('/api/create-order', {
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">First name</label>
                   <input type="text" name="first_name" required value={form.first_name} onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-black transition-colors" />
+                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
+                      formErrors.first_name ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                    }`} />
+                  {formErrors.first_name && <p className="text-red-500 text-xs mt-1">First name is required</p>}
                 </div>
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Last name</label>
                   <input type="text" name="last_name" required value={form.last_name} onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-black transition-colors" />
+                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
+                      formErrors.last_name ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                    }`} />
+                  {formErrors.last_name && <p className="text-red-500 text-xs mt-1">Last name is required</p>}
                 </div>
               </div>
 
               <div>
                 <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Address</label>
                 <input type="text" name="address_1" required value={form.address_1} onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-black transition-colors" />
+                  className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
+                    formErrors.address_1 ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                  }`} />
+                {formErrors.address_1 && <p className="text-red-500 text-xs mt-1">Address is required</p>}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">City</label>
                   <input type="text" name="city" required value={form.city} onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-black transition-colors" />
+                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
+                      formErrors.city ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                    }`} />
+                  {formErrors.city && <p className="text-red-500 text-xs mt-1">City is required</p>}
                 </div>
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">State / Province</label>
@@ -199,7 +247,10 @@ const res = await fetch('/api/create-order', {
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Postcode / ZIP</label>
                   <input type="text" name="postcode" required value={form.postcode} onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-black transition-colors" />
+                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
+                      formErrors.postcode ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                    }`} />
+                  {formErrors.postcode && <p className="text-red-500 text-xs mt-1">Postcode is required</p>}
                 </div>
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Country</label>
@@ -224,58 +275,104 @@ const res = await fetch('/api/create-order', {
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Email</label>
                   <input type="email" name="email" required value={form.email} onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-black transition-colors" />
+                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
+                      formErrors.email ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                    }`} />
+                  {formErrors.email && <p className="text-red-500 text-xs mt-1">Email is required</p>}
                 </div>
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Phone</label>
                   <input type="tel" name="phone" required value={form.phone} onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-black transition-colors" />
+                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
+                      formErrors.phone ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                    }`} />
+                  {formErrors.phone && <p className="text-red-500 text-xs mt-1">Phone is required</p>}
                 </div>
               </div>
 
 
-              <div className="pt-4 border-t border-gray-100">
-                <label className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-3 block">Payment Method</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="payment_method" value="bacs" checked={paymentMethod === 'bacs'} onChange={() => setPaymentMethod('bacs')} className="accent-black" />
-                    <span className="text-sm font-medium">Bank Transfer</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="payment_method" value="paypal" checked={paymentMethod === 'paypal'} onChange={() => setPaymentMethod('paypal')} className="accent-black" />
-                    <span className="text-sm font-medium">PayPal</span>
-                  </label>
+              <div className="pt-6 border-t border-gray-100">
+                <label className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-4 block">Payment Method</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Bank Transfer Card */}
+                  <div 
+                    onClick={() => setPaymentMethod('bacs')}
+                    className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                      paymentMethod === 'bacs' 
+                        ? 'border-black bg-gray-50/50' 
+                        : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50/20'
+                    }`}
+                  >
+                    <div className={`p-2.5 rounded-xl transition-colors ${paymentMethod === 'bacs' ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'}`}>
+                      <Building size={20} />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-gray-900">Bank Transfer</h4>
+                      <p className="text-xs text-gray-500 mt-1">Pay directly to our bank account.</p>
+                    </div>
+                  </div>
+
+                  {/* PayPal Card */}
+                  <div 
+                    onClick={() => setPaymentMethod('paypal')}
+                    className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                      paymentMethod === 'paypal' 
+                        ? 'border-[#0070ba] bg-[#0070ba]/5' 
+                        : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50/20'
+                    }`}
+                  >
+                    <div className={`p-2.5 rounded-xl transition-colors ${paymentMethod === 'paypal' ? 'bg-[#0070ba] text-white' : 'bg-gray-100 text-gray-500'}`}>
+                      <CreditCard size={20} />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-gray-900">PayPal</h4>
+                      <p className="text-xs text-gray-500 mt-1">Pay with credit card or PayPal account.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {paymentMethod === 'bacs' ? (
                 <button type="submit" disabled={loading}
-                  className="group w-full border border-black rounded-full flex items-center justify-between pl-6 pr-2 py-2 mt-4 transition-all duration-300 ease-out hover:bg-black hover:text-white active:scale-95 disabled:opacity-60">
+                  className="group w-full border border-black rounded-full flex items-center justify-between pl-6 pr-2 py-2 mt-6 transition-all duration-300 ease-out hover:bg-black hover:text-white active:scale-95 disabled:opacity-60">
                   <span className="text-sm font-bold tracking-wide">{loading ? 'Processing…' : 'Place Order'}</span>
                   <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center group-hover:bg-white transition-all duration-300 flex-shrink-0">
                     <ArrowRight size={18} className="text-white group-hover:text-black transition-colors duration-300 group-hover:translate-x-0.5" />
                   </div>
                 </button>
               ) : (
-                <div className="mt-6 z-0 relative">
-                  <PayPalButtons
-                    style={{ layout: "vertical" }}
-                    disabled={loading}
-                    createOrder={(data, actions) => {
-                      return actions.order.create({
-                        intent: 'CAPTURE',
-                        purchase_units: [
-                          {
-                            amount: {
-                              currency_code: 'USD',
-                              value: totalPrice.toFixed(2),
+                <div className="mt-6 space-y-4">
+                  <div className="z-0 relative">
+                    <PayPalButtons
+                      style={{ layout: "vertical", color: "gold", shape: "pill", label: "pay" }}
+                      disabled={loading}
+                      onClick={(data: any, actions: any) => {
+                        if (!validateForm(true)) {
+                          alert('Please fill out all required fields to proceed.');
+                          return actions.reject();
+                        }
+                        return actions.resolve();
+                      }}
+                      createOrder={(data: any, actions: any) => {
+                        return actions.order.create({
+                          intent: 'CAPTURE',
+                          purchase_units: [
+                            {
+                              amount: {
+                                currency_code: 'USD',
+                                value: totalPrice.toFixed(2),
+                              },
                             },
-                          },
-                        ],
-                      });
-                    }}
-                    onApprove={handlePayPalApprove}
-                  />
+                          ],
+                        });
+                      }}
+                      onApprove={handlePayPalApprove}
+                    />
+                  </div>
+                  <div className="flex items-center justify-center gap-2 text-xs text-gray-400 py-1.5 border border-gray-100 bg-gray-50/50 rounded-xl">
+                    <ShieldCheck size={14} className="text-green-500" />
+                    <span>Safe & secure 256-bit SSL encrypted checkout</span>
+                  </div>
                 </div>
               )}
 
