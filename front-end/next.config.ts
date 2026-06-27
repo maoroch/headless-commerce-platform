@@ -8,6 +8,8 @@ if (process.env.NODE_ENV === 'development') {
 const nextConfig: NextConfig = {
 
   images: {
+    unoptimized: true,
+    dangerouslyAllowLocalIP: true,
     remotePatterns: [
       {
         protocol: 'http',
@@ -30,18 +32,6 @@ const nextConfig: NextConfig = {
       {
         protocol: 'http',
         hostname: 'server-coomendem.local',
-        port: '',
-        pathname: '/wp-content/uploads/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'http://localhost:8080',
-        port: '',
-        pathname: '/wp-content/uploads/**',
-      },
-      {
-        protocol: 'http',
-        hostname: 'http://localhost:8080',
         port: '',
         pathname: '/wp-content/uploads/**',
       },

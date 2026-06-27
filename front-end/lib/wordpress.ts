@@ -100,9 +100,9 @@ async function wpFetch<T>(url: string, revalidate = 3600): Promise<T> {
   // Globally replace internal WordPress URL with public URL in the response JSON string
   const text = await res.text();
   const wpPublicUrl = process.env.NEXT_PUBLIC_WORDPRESS_URL || 'http://localhost:8080';
-  const matches = (text.match(/https?:\\?\/\\?\/(wordpress|server-coomendem\.local)(:[0-9]+)?/g) || []).length;
+  const matches = (text.match(/https?:\\?\/\\?\/(wordpress|localhost|server-coomendem\.local)(:[0-9]+)?/g) || []).length;
   console.log(`[wpFetch] Fetched: ${url} | Found ${matches} internal URLs. Replacing with: ${wpPublicUrl}`);
-  const updatedText = text.replace(/https?:\\?\/\\?\/(wordpress|server-coomendem\.local)(:[0-9]+)?/g, wpPublicUrl);
+  const updatedText = text.replace(/https?:\\?\/\\?\/(wordpress|localhost|server-coomendem\.local)(:[0-9]+)?/g, wpPublicUrl);
   return JSON.parse(updatedText) as T;
 }
 
