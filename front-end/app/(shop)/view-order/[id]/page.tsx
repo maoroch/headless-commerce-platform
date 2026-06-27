@@ -187,8 +187,6 @@ export default async function ViewOrderPage({ params }: Props) {
             <Card>
               <CardHeader icon={<Package size={15} />} title="Items" />
               <ul className="divide-y divide-gray-50">
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
                 {order.line_items.map((item: any) => (
                   <li key={item.id} className="flex items-start gap-4 px-6 py-5">
                     <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-100">

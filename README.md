@@ -76,6 +76,7 @@ Built following the **C4 Software Architecture Model**.
 
 - **DB Auto-Seeding:** MySQL imports table structures, products, pages, and blog posts from `seed.sql` on first boot.
 - **Asset Auto-Extraction:** If `wp-content/uploads` is empty, the container unpacks the 168 MB `uploads.zip` (product and blog images) and sets correct Apache permissions (`chown -R www-data:www-data`).
+- **PayPal Integration:** Added PayPal checkout integration using `@paypal/react-paypal-js` with sandbox support and UI enhancements.
 - **Pretty Permalinks:** WP-CLI configures permalink structure (`/%postname%/`) required for WooCommerce REST API routing.
 - **Plugin & Theme Activation:** WP-CLI force-installs **WooCommerce 10.7.0** and the **Storefront** theme to guarantee a consistent state regardless of what the database already records.
 - **Auto-Generated API Credentials:** A PHP script runs inside the container on startup, generates and hashes WooCommerce REST API keys, and writes them directly to `wp_woocommerce_api_keys`.

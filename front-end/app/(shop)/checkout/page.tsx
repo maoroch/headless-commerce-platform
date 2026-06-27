@@ -93,7 +93,7 @@ export default function CheckoutPage() {
       if (!res.ok) throw new Error(resData.error || 'Order creation failed');
       clearCart();
       router.push(`/order-confirmation/${resData.id}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       alert((err as Error).message);
@@ -114,47 +114,47 @@ export default function CheckoutPage() {
     }
     setLoading(true);
     try {
-const res = await fetch('/api/create-order', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  },
-  body: JSON.stringify({
-    billing: {
-      first_name: form.first_name,
-      last_name: form.last_name,
-      address_1: form.address_1,
-      city: form.city,
-      state: form.state,
-      postcode: form.postcode,
-      country: form.country,
-      email: form.email,
-      phone: form.phone,
-    },
-    shipping: {   // 👈 обязательно
-      first_name: form.first_name,
-      last_name: form.last_name,
-      address_1: form.address_1,
-      city: form.city,
-      state: form.state,
-      postcode: form.postcode,
-      country: form.country,
-      phone: form.phone,
-    },
-    line_items: items.map(item => ({
-      product_id: item.product.id,
-      quantity: item.quantity,
-    })),
-    payment_method: paymentMethod,
-    customer_note: 'Thank you for your order!',
-  }),
-});
+      const res = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          billing: {
+            first_name: form.first_name,
+            last_name: form.last_name,
+            address_1: form.address_1,
+            city: form.city,
+            state: form.state,
+            postcode: form.postcode,
+            country: form.country,
+            email: form.email,
+            phone: form.phone,
+          },
+          shipping: {   // 👈 обязательно
+            first_name: form.first_name,
+            last_name: form.last_name,
+            address_1: form.address_1,
+            city: form.city,
+            state: form.state,
+            postcode: form.postcode,
+            country: form.country,
+            phone: form.phone,
+          },
+          line_items: items.map(item => ({
+            product_id: item.product.id,
+            quantity: item.quantity,
+          })),
+          payment_method: paymentMethod,
+          customer_note: 'Thank you for your order!',
+        }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Order creation failed');
       clearCart();
       router.push(`/order-confirmation/${data.id}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       alert((err as Error).message);
@@ -203,17 +203,15 @@ const res = await fetch('/api/create-order', {
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">First name</label>
                   <input type="text" name="first_name" required value={form.first_name} onChange={handleChange}
-                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
-                      formErrors.first_name ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
-                    }`} />
+                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${formErrors.first_name ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                      }`} />
                   {formErrors.first_name && <p className="text-red-500 text-xs mt-1">First name is required</p>}
                 </div>
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Last name</label>
                   <input type="text" name="last_name" required value={form.last_name} onChange={handleChange}
-                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
-                      formErrors.last_name ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
-                    }`} />
+                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${formErrors.last_name ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                      }`} />
                   {formErrors.last_name && <p className="text-red-500 text-xs mt-1">Last name is required</p>}
                 </div>
               </div>
@@ -221,9 +219,8 @@ const res = await fetch('/api/create-order', {
               <div>
                 <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Address</label>
                 <input type="text" name="address_1" required value={form.address_1} onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
-                    formErrors.address_1 ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
-                  }`} />
+                  className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${formErrors.address_1 ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                    }`} />
                 {formErrors.address_1 && <p className="text-red-500 text-xs mt-1">Address is required</p>}
               </div>
 
@@ -231,9 +228,8 @@ const res = await fetch('/api/create-order', {
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">City</label>
                   <input type="text" name="city" required value={form.city} onChange={handleChange}
-                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
-                      formErrors.city ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
-                    }`} />
+                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${formErrors.city ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                      }`} />
                   {formErrors.city && <p className="text-red-500 text-xs mt-1">City is required</p>}
                 </div>
                 <div>
@@ -247,9 +243,8 @@ const res = await fetch('/api/create-order', {
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Postcode / ZIP</label>
                   <input type="text" name="postcode" required value={form.postcode} onChange={handleChange}
-                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
-                      formErrors.postcode ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
-                    }`} />
+                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${formErrors.postcode ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                      }`} />
                   {formErrors.postcode && <p className="text-red-500 text-xs mt-1">Postcode is required</p>}
                 </div>
                 <div>
@@ -275,17 +270,15 @@ const res = await fetch('/api/create-order', {
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Email</label>
                   <input type="email" name="email" required value={form.email} onChange={handleChange}
-                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
-                      formErrors.email ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
-                    }`} />
+                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${formErrors.email ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                      }`} />
                   {formErrors.email && <p className="text-red-500 text-xs mt-1">Email is required</p>}
                 </div>
                 <div>
                   <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Phone</label>
                   <input type="tel" name="phone" required value={form.phone} onChange={handleChange}
-                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${
-                      formErrors.phone ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
-                    }`} />
+                    className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none transition-colors ${formErrors.phone ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-black'
+                      }`} />
                   {formErrors.phone && <p className="text-red-500 text-xs mt-1">Phone is required</p>}
                 </div>
               </div>
@@ -295,13 +288,12 @@ const res = await fetch('/api/create-order', {
                 <label className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-4 block">Payment Method</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Bank Transfer Card */}
-                  <div 
+                  <div
                     onClick={() => setPaymentMethod('bacs')}
-                    className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                      paymentMethod === 'bacs' 
-                        ? 'border-black bg-gray-50/50' 
+                    className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === 'bacs'
+                        ? 'border-black bg-gray-50/50'
                         : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50/20'
-                    }`}
+                      }`}
                   >
                     <div className={`p-2.5 rounded-xl transition-colors ${paymentMethod === 'bacs' ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'}`}>
                       <Building size={20} />
@@ -313,13 +305,12 @@ const res = await fetch('/api/create-order', {
                   </div>
 
                   {/* PayPal Card */}
-                  <div 
+                  <div
                     onClick={() => setPaymentMethod('paypal')}
-                    className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                      paymentMethod === 'paypal' 
-                        ? 'border-[#0070ba] bg-[#0070ba]/5' 
+                    className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === 'paypal'
+                        ? 'border-[#0070ba] bg-[#0070ba]/5'
                         : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50/20'
-                    }`}
+                      }`}
                   >
                     <div className={`p-2.5 rounded-xl transition-colors ${paymentMethod === 'paypal' ? 'bg-[#0070ba] text-white' : 'bg-gray-100 text-gray-500'}`}>
                       <CreditCard size={20} />
@@ -341,10 +332,10 @@ const res = await fetch('/api/create-order', {
                   </div>
                 </button>
               ) : (
-                <div className="mt-6 space-y-4">
-                  <div className="z-0 relative">
+                <div className="mt-6 space-y-4 w-full">
+                  <div className="z-0 relative w-full">
                     <PayPalButtons
-                      style={{ layout: "vertical", color: "gold", shape: "pill", label: "pay" }}
+                      style={{ layout: "vertical", color: "gold", shape: "rect", label: "pay" }}
                       disabled={loading}
                       onClick={(data: any, actions: any) => {
                         if (!validateForm(true)) {
